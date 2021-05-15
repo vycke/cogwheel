@@ -1,16 +1,15 @@
 # JavaScript FSM
 
-![](https://github.com/kevtiq/petrinets/workflows/test/badge.svg)
-[![Node version](https://img.shields.io/npm/v/petrinets.svg?style=flat)](https://www.npmjs.com/package/petrinets)
-[![NPM Downloads](https://img.shields.io/npm/dm/petrinets.svg?style=flat)](https://www.npmjs.com/package/petrinets)
-[![Minified size](https://img.shields.io/bundlephobia/min/petrinets?label=minified)](https://www.npmjs.com/package/petrinets)
+![](https://github.com/kevtiq/fsm/workflows/test/badge.svg)
+[![Node version](https://img.shields.io/npm/v/@crinkle/fsm.svg?style=flat)](https://www.npmjs.com/package/@crinkle/fsm)
+[![NPM Downloads](https://img.shields.io/npm/dm/@crinkle/fsm.svg?style=flat)](https://www.npmjs.com/package/@crinkle/fsm)
+[![Minified size](https://img.shields.io/bundlephobia/min/@crinkle/fsm?label=minified)](https://www.npmjs.com/package/@crinkle/fsm)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 
 Simple finite state machines that can be used for state/process management. It has optional guards on the transitions. If a guard returns true, a transition cannot fire.
 
 ```js
-import { fsm } from 'petrinet';
+import fsm from '@crinkle/fsm';
 
 const states = {
   green: { CHANGE: 'yellow', BREAK: 'broken' },
