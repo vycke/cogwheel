@@ -1,0 +1,17 @@
+
+{
+  "include": ["src"],
+  "compilerOptions": {
+    "target": "es5",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "composite": true,
+    "strictNullChecks": true,
+    "allowJs": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "removeComments": true
+  }
+}
