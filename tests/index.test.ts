@@ -1,4 +1,4 @@
-import fsm from '../src/fsm';
+import fsm from '../src';
 
 function delay(ms = 0) {
   return new Promise((resolve) => {
