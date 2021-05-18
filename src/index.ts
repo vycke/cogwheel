@@ -1,5 +1,5 @@
 type ActionCreator = (event: string) => void;
-type Action = (creator: ActionCreator) => void;
+type Action = (creator: ActionCreator, event: string) => void;
 
 type Node = { on: { [key: string]: string }; entry?: Action };
 
@@ -25,7 +25,7 @@ export function fsm(initial: string, states: Record<string, Node>): Machine {
 
     _listener?.(_state.current, target, event);
     _state.current = target;
-    states[target].entry?.(send);
+    states[target].entry?.(send, event);
   }
 
   return new Proxy(_state, { set: () => true });
