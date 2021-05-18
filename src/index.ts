@@ -1,28 +1,32 @@
-type Send = (name: string) => void;
-type Effect = (send: Send) => void;
-type Node = Record<string, string> | { effect: Effect };
-type Config = Record<string, Node>;
-type State = { value: string };
-type CB = (state: State) => void;
-type Machine = { send: Send; state: State };
+type ActionCreator = (event: string) => void;
+type Action = (creator: ActionCreator) => void;
+
+type Node = { on: { [key: string]: string }; entry?: Action };
+
+type Listener = (source: string, target: string, event: string) => void;
+type Machine = {
+  current: string;
+  send: ActionCreator;
+  listen(listener?: Listener): void;
+};
 
 // wrap a machine in a service
-export default function fsm(init: string, states: Config, cb?: CB): Machine {
-  let _state = Object.freeze({ value: init });
+export function fsm(initial: string, states: Record<string, Node>): Machine {
+  let _listener: Listener | undefined;
+  const _state: Machine = {
+    current: initial,
+    send,
+    listen: (l) => (_listener = l),
+  };
 
-  function send(name: string): void {
-    const event = states[_state.value][name];
-    if (!event || !states[event]) return;
+  function send(event: string): void {
+    const target = states[_state.current].on[event];
+    if (!states[target]) return;
 
-    _state = Object.freeze({ value: event });
-    cb?.(_state);
-    (states[event].effect as Effect)?.(send), 0;
+    _listener?.(_state.current, target, event);
+    _state.current = target;
+    states[target].entry?.(send);
   }
 
-  return {
-    get state() {
-      return _state;
-    },
-    send,
-  };
+  return new Proxy(_state, { set: () => true });
 }

@@ -11,41 +11,44 @@ Simple finite state machines that can be used for state/process management. It h
 ```js
 import fsm from '@crinkle/fsm';
 
-const states = {
-  green: { CHANGE: 'yellow', BREAK: 'broken' },
+const config = {
+  green: { on: { CHANGE: 'yellow', BREAK: 'broken' } },
   yellow: {
-    CHANGE: 'red',
-    async effect(send) {
+    on: { CHANGE: 'red' },
+    async entry(send: Function) {
       await delay(100); // delay for 3000ms
       send('CHANGE');
     },
   },
-  red: { CHANGE: 'green' },
+  red: { on: { CHANGE: 'green' } },
   broken: {
-    STOP: 'red',
-    effect(send) {
-      send('STOP');
-    },
+    on: { STOP: 'red' },
+    entry: (send) => send('STOP'),
   },
 };
 
 // Simple invoking
-const myMachine = fsm('green', states);
-myMachine.send('CHANGE');
-myMachine.send('CHANGE');
-console.log(myMachine.state); // { value: 'red' }
+const machine = fsm('green', states);
+machine.send('CHANGE');
+machine.send('CHANGE');
+console.log(machine.current); // red
 
 // direct sideeffects on state change
-const myMachine = fsm('green', states);
-myMachine.send('BREAK');
-console.log(myMachine.state); // { value: 'red' }
+machine.send('BREAK');
+console.log(machine.current); // red
 
-// delayed effects and machine callbacks
+// delayed sideeffects
+console.log(machine.current); // green
+machine.send('CHANGE');
+console.log(machine.current); // yellow
+// wait for delay
+console.log(machine.current); // red
+
+// listeners
 let calls = 0;
-const cb = () => calls++;
-const myMachine = fsm('green', states, cb);
-myMachine.send('CHANGE');
-console.log(myMachine.state, calls); // { value: yellow }, 1
-// wait for the delay
-console.log(myMachine.state, calls); // { value: 'red' }, 2
+const cb = (s, t, e) => calls++;
+machine.listen(cb);
+machine.send('CHANGE');
+console.log(machine.current, calls); // yellow, 1
+machine.listen(); // remove listener
 ```
