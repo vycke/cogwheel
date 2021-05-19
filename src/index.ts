@@ -23,8 +23,9 @@ export function fsm(initial: string, states: Record<string, Node>): Machine {
     const target = states[_state.current].on[event];
     if (!states[target]) return;
 
-    _listener?.(_state.current, target, event);
+    const oldstate = _state.current;
     _state.current = target;
+    _listener?.(oldstate, _state.current, event);
     states[target].entry?.(send, event);
   }
 
