@@ -1,4 +1,5 @@
-type ActionCreator = (event: string) => void;
+type Options = { delay?: number };
+type ActionCreator = (event: string, options?: Options) => void;
 type Action = (creator: ActionCreator, event: string) => void;
 
 type Node = { on: { [key: string]: string }; entry?: Action };
@@ -11,22 +12,31 @@ type Machine = {
 };
 
 // wrap a machine in a service
-export function fsm(initial: string, states: Record<string, Node>): Machine {
+export function fsm(initial: string, config: Record<string, Node>): Machine {
   let _listener: Listener | undefined;
+  let _timeout: ReturnType<typeof setTimeout>;
   const _state: Machine = {
     current: initial,
     send,
     listen: (l) => (_listener = l),
   };
 
-  function send(event: string): void {
-    const target = states[_state.current].on[event];
-    if (!states[target]) return;
-
+  // function to exect
+  function transition(target: string, event: string) {
     const oldstate = _state.current;
     _state.current = target;
     _listener?.(oldstate, _state.current, event);
-    states[target].entry?.(send, event);
+    config[target].entry?.(send, event);
+  }
+
+  function send(event: string, options?: Options): void {
+    clearTimeout(_timeout);
+    const target = config[_state.current].on[event];
+    if (!config[target]) return;
+
+    if (options?.delay)
+      _timeout = setTimeout(() => transition(target, event), options.delay);
+    else transition(target, event);
   }
 
   return new Proxy(_state, { set: () => true });

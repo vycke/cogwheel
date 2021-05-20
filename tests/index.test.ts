@@ -8,12 +8,11 @@ function delay(ms = 0) {
 }
 
 const config = {
-  green: { on: { CHANGE: 'yellow', BREAK: 'broken' } },
+  green: { on: { CHANGE: 'yellow', BREAK: 'broken', TOSTATIC: 'static' } },
   yellow: {
     on: { CHANGE: 'red' },
-    async entry(send: Function) {
-      await delay(100); // delay for 3000ms
-      send('CHANGE');
+    entry(send: Function) {
+      send('CHANGE', { delay: 100 });
     },
   },
   red: { on: { CHANGE: 'green', WRONGTARGET: 'nonexisting' } },
@@ -21,6 +20,13 @@ const config = {
     on: { STOP: 'red' },
     entry(send: Function) {
       send('STOP');
+    },
+  },
+  static: {
+    on: { CANCEL: 'red', DELAYED: 'green' },
+    entry(send: Function) {
+      console.log('yay');
+      send('DELAYED', { delay: 500 });
     },
   },
 };
@@ -72,5 +78,21 @@ describe('finite state machine', () => {
     expect(service.current).toBe('green');
     service.current = 'red';
     expect(service.current).toBe('green');
+  });
+
+  test('cancel delay', async () => {
+    const cb = jest.fn((x) => x);
+    const service = fsm('green', config);
+    service.listen(cb);
+    expect(service.current).toBe('green');
+    service.send('TOSTATIC');
+    expect(service.current).toBe('static');
+    await delay(100);
+    service.send('CANCEL');
+    expect(service.current).toBe('red');
+    expect(cb.mock.calls.length).toBe(2);
+    await delay(500);
+    expect(service.current).toBe('red');
+    expect(cb.mock.calls.length).toBe(2);
   });
 });
