@@ -1,18 +1,24 @@
 type Options = { delay?: number };
-type ActionCreator = (event: string, options?: Options) => void;
-type Action = (creator: ActionCreator, event: string) => void;
+type Context = Record<string, unknown>;
+type Send = (event: string, options?: Options, ctx?: Context) => void;
+type Action = (send: Send, event?: string, ctx?: Context) => void;
 
-type Node = { on: { [key: string]: string }; entry?: Action };
+// type Guard = (ctx?: Context) => boolean;
+type Transition = string;
+type State = { on?: { [key: string]: Transition }; entry?: Action };
 
 type Listener = (source: string, target: string, event: string) => void;
 type Machine = {
   current: string;
-  send: ActionCreator;
+  send: Send;
   listen(listener?: Listener): void;
 };
 
 // wrap a machine in a service
-export function fsm(initial: string, config: Record<string, Node>): Machine {
+export function fsm(initial: string, config: Record<string, State>): Machine {
+  // Throw error if initial state does not exist
+  if (!config[initial]) throw Error('Initial state does not exist');
+
   let _listener: Listener | undefined;
   let _timeout: ReturnType<typeof setTimeout>;
   const _state: Machine = {
@@ -21,23 +27,27 @@ export function fsm(initial: string, config: Record<string, Node>): Machine {
     listen: (l) => (_listener = l),
   };
 
-  // function to exect
-  function transition(target: string, event: string) {
+  // function to execute the state machine
+  function transition(event: string, ctx?: Context) {
+    const target = config[_state.current].on?.[event];
+
+    if (!target || !config[target]) return;
     const oldstate = _state.current;
     _state.current = target;
     _listener?.(oldstate, _state.current, event);
-    config[target].entry?.(send, event);
+    config[target].entry?.(send, event, ctx);
   }
 
-  function send(event: string, options?: Options): void {
+  // The action creator
+  function send(event: string, options?: Options, ctx?: Context): void {
     clearTimeout(_timeout);
-    const target = config[_state.current].on[event];
-    if (!config[target]) return;
-
     if (options?.delay)
-      _timeout = setTimeout(() => transition(target, event), options.delay);
-    else transition(target, event);
+      _timeout = setTimeout(() => transition(event, ctx), options.delay);
+    else transition(event, ctx);
   }
+
+  // Invoke entry if existing on the initial state
+  config[initial].entry?.(send);
 
   return new Proxy(_state, { set: () => true });
 }
