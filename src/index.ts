@@ -1,11 +1,13 @@
-type Options = { delay?: number };
+/* eslint-disable @typescript-eslint/ban-types */
 type Context = Record<string, unknown>;
-type Send = (event: string, options?: Options, ctx?: Context) => void;
-type Action = (send: Send, event?: string, ctx?: Context) => void;
+type Options = { delay?: number };
 
-// type Guard = (ctx?: Context) => boolean;
-type Transition = string;
-type State = { on?: { [key: string]: Transition }; entry?: Action };
+type Send = (event: string, options?: Options, ctx?: Context) => void;
+type Action = (send: Send, ctx?: Context) => void;
+
+type Guard = (ctx?: Context) => boolean;
+type Transition = { target: string; guard?: Guard };
+type State = { on?: { [key: string]: string | Transition }; entry?: Action };
 
 type Listener = (source: string, target: string, event: string) => void;
 type Machine = {
@@ -27,15 +29,22 @@ export function fsm(initial: string, config: Record<string, State>): Machine {
     listen: (l) => (_listener = l),
   };
 
+  function getTransition(event: string): Transition {
+    const transition = config[_state.current].on?.[event];
+    if (typeof transition === 'string') return { target: transition };
+    return transition ?? { target: '' };
+  }
+
   // function to execute the state machine
   function transition(event: string, ctx?: Context) {
-    const target = config[_state.current].on?.[event];
+    const { target, guard } = getTransition(event);
 
-    if (!target || !config[target]) return;
+    // invalid end result or guard holds result
+    if (!config[target] || (guard && !guard(ctx))) return;
     const oldstate = _state.current;
     _state.current = target;
     _listener?.(oldstate, _state.current, event);
-    config[target].entry?.(send, event, ctx);
+    config[target].entry?.(send, ctx);
   }
 
   // The action creator
