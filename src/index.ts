@@ -5,7 +5,7 @@ type Options = { delay?: number };
 type Send = (event: string, options?: Options, ctx?: Context) => void;
 type Action = (send: Send, ctx?: Context) => void;
 
-type Guard = (ctx?: Context) => boolean;
+type Guard = (ctx: Context) => boolean;
 type Transition = { target: string; guard?: Guard };
 type State = { on?: { [key: string]: string | Transition }; entry?: Action };
 
@@ -40,7 +40,9 @@ export function fsm(initial: string, config: Record<string, State>): Machine {
     const { target, guard } = getTransition(event);
 
     // invalid end result or guard holds result
-    if (!config[target] || (guard && !guard(ctx))) return;
+    if (!config[target]) return;
+    if (guard && (!ctx || !guard(ctx))) return;
+
     const oldstate = _state.current;
     _state.current = target;
     _listener?.(oldstate, _state.current, event);
