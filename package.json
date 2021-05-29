@@ -1,5 +1,5 @@
 {
-  "name": "@crinkle/fsm",
+  "name": "@crinkles/fsm",
   "version": "0.4.0",
   "description": "Simple state machine",
   "main": "dist/index.js",

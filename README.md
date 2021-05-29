@@ -1,9 +1,9 @@
 # JavaScript FSM
 
 ![](https://github.com/kevtiq/fsm/workflows/test/badge.svg)
-[![Node version](https://img.shields.io/npm/v/@crinkle/fsm.svg?style=flat)](https://www.npmjs.com/package/@crinkle/fsm)
-[![NPM Downloads](https://img.shields.io/npm/dm/@crinkle/fsm.svg?style=flat)](https://www.npmjs.com/package/@crinkle/fsm)
-[![Minified size](https://img.shields.io/bundlephobia/min/@crinkle/fsm?label=minified)](https://www.npmjs.com/package/@crinkle/fsm)
+[![Node version](https://img.shields.io/npm/v/@crinkles/fsm.svg?style=flat)](https://www.npmjs.com/package/@crinkles/fsm)
+[![NPM Downloads](https://img.shields.io/npm/dm/@crinkles/fsm.svg?style=flat)](https://www.npmjs.com/package/@crinkles/fsm)
+[![Minified size](https://img.shields.io/bundlephobia/min/@crinkles/fsm?label=minified)](https://www.npmjs.com/package/@crinkles/fsm)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Simple finite state machines that can be used for state/process management.
@@ -13,7 +13,7 @@ Simple finite state machines that can be used for state/process management.
 A simple state machine can be initiated using the `fsm` function from the package. It allows you to view the current state (`machine.current`), or invoke a transition via the `.send(event: string)` function, with an optional `delay` .
 
 ```js
-import { fsm } from '@crinkle/fsm';
+import { fsm } from '@crinkles/fsm';
 
 const config = {
   green: { on: { CHANGE: 'yellow' } },
@@ -98,7 +98,7 @@ machine.send('CHANGE', {}, { allowed: true }); // will result changes
 ## React Hook example
 
 ```js
-import { fsm } from '@crinkle/fsm';
+import { fsm } from '@crinkles/fsm';
 import { useLayoutEffect, useReducer, useRef } from 'react';
 
 // Define the hook, with query for computed parameters
