@@ -1,6 +1,6 @@
 # JavaScript FSM
 
-![](https://github.com/kevtiq/fsm/workflows/test/badge.svg)
+![](https://github.com/crinklesio/fsm/workflows/test/badge.svg)
 [![Node version](https://img.shields.io/npm/v/@crinkles/fsm.svg?style=flat)](https://www.npmjs.com/package/@crinkles/fsm)
 [![NPM Downloads](https://img.shields.io/npm/dm/@crinkles/fsm.svg?style=flat)](https://www.npmjs.com/package/@crinkles/fsm)
 [![Minified size](https://img.shields.io/bundlephobia/min/@crinkles/fsm?label=minified)](https://www.npmjs.com/package/@crinkles/fsm)

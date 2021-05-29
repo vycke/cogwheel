@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kevtiq/fsm.git"
+    "url": "git+https://github.com/crinklesio/fsm.git"
   },
   "keywords": [
     "fsm",
@@ -31,9 +31,9 @@
   "author": "Kevin Pennekamp <github@crinkle.dev>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kevtiq/fsm/issues"
+    "url": "https://github.com/crinklesio/fsm/issues"
   },
-  "homepage": "https://github.com/kevtiq/fsm#readme",
+  "homepage": "https://github.com/crinklesio/fsm#readme",
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^13.0.0",
     "@types/jest": "^26.0.23",
