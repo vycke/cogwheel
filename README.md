@@ -113,3 +113,57 @@ export default function useFsm(initial, config) {
   return value.current;
 }
 ```
+
+## Get all the states
+
+```js
+function mockSend(state) {
+  return function (event, options) {
+    state.data.entry = event;
+    if (options?.delay) state.data.delay = options.delay;
+  };
+}
+
+export function getStates(config) {
+  const states [];
+
+  for (const key in config) {
+    const state = { id: key, data: { label: key } };
+    config[key].entry?.(mockSend(state));
+    states.push(state);
+  }
+
+  return states;
+}
+```
+
+## Get all transitions
+
+```js
+// stringify the guard function
+function conv(_key_, val) {
+  return String(val);
+}
+
+export function getTransitions(config) {
+  const edges = [];
+
+  for (const source in config) {
+    const transitions = config[source].on;
+
+    for (const name in transitions) {
+      const t = transitions[name];
+      const target = transition?.target || transition;
+
+      const edge = { source, target, data: { label: name } };
+
+      if (t?.guard)
+        edge.data.guard = JSON.stringify(t?.guard, conv).replaceAll('"', '');
+
+      edges.push(edge);
+    }
+  }
+
+  return edges;
+}
+```
