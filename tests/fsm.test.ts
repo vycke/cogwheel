@@ -119,7 +119,7 @@ test('Guard - guarded transition', () => {
       on: {
         CHANGE: {
           target: 'yellow',
-          guard: (u: Record<string, unknown>) => u?.allowed as boolean,
+          guard: (u: { allowed?: boolean }) => u.allowed as boolean,
         },
       },
     },
