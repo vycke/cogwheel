@@ -1,43 +1,26 @@
 /* eslint-disable @typescript-eslint/ban-types */
-enum ActionTypes {
-  send,
-  assign,
-}
-
-type Guard<T> = (ctx: T) => boolean;
-type Transition<T> = { target: string; guard?: Guard<T> };
-type SendAction = { event: string; delay?: number };
-type AssignAction<T> = T;
-
-type ActionCreator<T> = {
-  type: ActionTypes;
-  action: SendAction | AssignAction<T>;
-};
-type EntryAction<T> = (
-  ctx?: T,
-  values?: unknown
-) => void | ActionCreator<T | unknown> | ActionCreator<T | unknown>[];
-type State<T> = {
-  on?: { [key: string]: string | Transition<T> };
-  entry?: EntryAction<T>;
-};
-
-type Listener = (source: string, target: string, event: string) => void;
-type Machine<T> = {
-  current: string;
-  send(event: string, delay?: number, values?: unknown): void;
-  context: T;
-  listen(listener?: Listener): void;
-};
+import {
+  Action,
+  ActionTypes,
+  ActionFn,
+  State,
+  Machine,
+  Listener,
+  SingleArray,
+  Transition,
+} from './types';
 
 // Action creator
-export function send<T>(action: SendAction): ActionCreator<T> {
-  return { type: ActionTypes.send, action };
+export function send<T extends object>(
+  event: string,
+  delay?: number
+): Action<T> {
+  return { type: ActionTypes.send, event, delay };
 }
 
 // Action creator
-export function assign<T>(ctx: T): ActionCreator<T> {
-  return { type: ActionTypes.assign, action: ctx };
+export function assign<T extends object>(assigner: ActionFn<T>): Action<T> {
+  return { type: ActionTypes.assign, action: assigner };
 }
 
 // wrap a machine in a service
@@ -71,23 +54,22 @@ export function fsm<T extends object>(
     else transition(event, values);
   }
 
-  function executeAction(creator: ActionCreator<T | unknown>): void {
-    let _action;
-    if (creator.type === ActionTypes.send) {
-      _action = creator.action as SendAction;
-      send(_action.event, _action.delay);
-    }
-    if (creator.type === ActionTypes.assign)
-      _state.context = creator.action as AssignAction<T>;
+  //
+  function executeAction(creator: Action<T>, values?: unknown): void {
+    if (creator.type === ActionTypes.send)
+      send(creator.event as string, creator.delay as number | undefined);
+    if (creator.type === ActionTypes.assign && creator.action)
+      _state.context = (creator.action as ActionFn<T>)(_state.context, values);
   }
 
   // function to execture various actions
-  function executeEntryAction(entry?: EntryAction<T>, values?: unknown): void {
-    const actions = entry?.(_state.context, values);
-    if (!actions) return;
-
-    if (Array.isArray(actions)) actions.forEach((a) => executeAction(a));
-    else executeAction(actions);
+  function executeEntryAction(
+    entry?: SingleArray<Action<T>>,
+    values?: unknown
+  ): void {
+    if (!entry) return;
+    if (Array.isArray(entry)) entry.forEach((e) => executeAction(e, values));
+    else executeAction(entry, values);
   }
 
   // function to execute the state machine

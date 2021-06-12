@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { fsm, send, assign } from '../src';
+import { Action } from '../src/types';
 
 function delay(ms = 0) {
   return new Promise((resolve) => {
@@ -84,11 +85,11 @@ test('Entry actions - auto-transition', async () => {
     green: { on: { CHANGE: 'yellow' } },
     yellow: {
       on: { CHANGE: 'red' },
-      entry: () => send({ event: 'CHANGE' }),
+      entry: send('CHANGE'),
     },
     red: {
       on: { CHANGE: 'green' },
-      entry: () => send({ event: 'CHANGE', delay: 100 }),
+      entry: send('CHANGE', 100),
     },
   };
 
@@ -104,7 +105,7 @@ test('Entry actions - auto-transition on initial state', () => {
   const configStart = {
     start: {
       on: { CHANGE: 'end' },
-      entry: () => send({ event: 'CHANGE' }),
+      entry: send('CHANGE'),
     },
     end: {},
   };
@@ -121,7 +122,7 @@ test('Entry actions - update context', () => {
       on: { CHANGE: 'end' },
     },
     end: {
-      entry: (ctx: Context) => assign({ count: ctx.count + 1 }),
+      entry: assign((ctx: Context) => ({ count: ctx.count + 1 })),
     },
   };
 
@@ -141,8 +142,10 @@ test('Entry actions - update context based on transition input', () => {
       on: { CHANGE: 'end' },
     },
     end: {
-      entry: (ctx: Context, obj: unknown) =>
-        assign({ count: ctx.count + (obj as Obj)?.count || 0 } as Context),
+      entry: assign(
+        (ctx: Context, obj: unknown) =>
+          ({ count: ctx.count + (obj as Obj)?.count || 0 } as Context)
+      ),
     },
   };
 
@@ -162,9 +165,9 @@ test('Entry actions - multiple actions', () => {
     },
     middle: {
       on: { CHANGE: 'end' },
-      entry: (ctx: Context) => [
-        assign({ count: ctx.count + 1 }),
-        send({ event: 'CHANGE' }),
+      entry: [
+        assign((ctx: Context) => ({ count: ctx.count + 1 } as Context)),
+        send('CHANGE') as Action<Context>,
       ],
     },
     end: {},

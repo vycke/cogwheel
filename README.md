@@ -76,7 +76,7 @@ const config = {
   green: { on: { CHANGE: 'red' } },
   red: {
     on: { CHANGE: 'green' },
-    entry: () => send({ event: 'CHANGE', delay: 3000 }),
+    entry: send('CHANGE', 3000),
   },
 };
 ```
@@ -94,11 +94,11 @@ const config = {
   green: { on: { CHANGE: 'yellow' } },
   yellow: {
     on: { CHANGE: 'red' },
-    entry: (ctx) => assign({ count: ctx.count + 1 }),
+    entry: assign((ctx) => ({ count: ctx.count + 1 })),
   },
   yellow: {
     on: { CHANGE: 'green' },
-    entry: (ctx, values) => assign({ count: ctx.count + values.count }),
+    entry: assign((ctx, values) => ({ count: ctx.count + values.count })),
   },
 };
 
@@ -122,9 +122,9 @@ const config = {
   },
   red: {
     on: { CHANGE: 'green' },
-    entry: (ctx, event) => [
-      assign({ count: ctx.count + 1 + event.count }),
-      send({ event: 'CHANGE', delay: 3000 }),
+    entry: [
+      assign((ctx) => ({ count: ctx.count + 1 + event.count })),
+      send('CHANGE', 3000),
     ],
   },
 };
