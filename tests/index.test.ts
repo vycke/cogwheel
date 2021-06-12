@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { fsm, send, assign } from '../src';
-import { Action } from '../src/types';
+import { Action, ActionFn } from '../src/types';
 
 function delay(ms = 0) {
   return new Promise((resolve) => {
@@ -122,7 +122,9 @@ test('Entry actions - update context', () => {
       on: { CHANGE: 'end' },
     },
     end: {
-      entry: assign((ctx: Context) => ({ count: ctx.count + 1 })),
+      entry: assign((ctx: Context) => ({
+        count: ctx.count + 1,
+      })),
     },
   };
 

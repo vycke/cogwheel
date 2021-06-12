@@ -8,7 +8,7 @@ export type SingleArray<T> = T[] | T;
 export type Guard<T> = (context: T) => boolean;
 export type Transition<T> = { target: string; guard?: Guard<T> };
 
-export type ActionFn<T extends object> = (ctx?: T, values?: unknown) => T;
+export type ActionFn<T extends object> = (ctx: T, values?: unknown) => T;
 export type Action<T extends object> = {
   type: ActionTypes;
   action?: ActionFn<T>;
