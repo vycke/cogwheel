@@ -185,7 +185,7 @@ test('Guard - allowed', () => {
       on: {
         CHANGE: {
           target: 'yellow',
-          guard: (c) => c.allowed,
+          guard: (c: Context) => c.allowed,
         },
       },
     },
@@ -206,7 +206,7 @@ test('Guard - allowed', () => {
       on: {
         CHANGE: {
           target: 'yellow',
-          guard: (c) => c.allowed,
+          guard: (c: Context) => c.allowed,
         },
       },
     },
