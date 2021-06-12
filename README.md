@@ -23,7 +23,7 @@ const config = {
 
 const machine = fsm('green', config);
 // machine.current = 'green'
-machine.send('CHANGE', { delay?: 3000 });
+machine.send('CHANGE', 3000);
 // machine.current = 'yellow'
 ```
 
@@ -39,42 +39,102 @@ function listener(source, target, event) {
 machine.listen(listener);
 ```
 
-## Entry actions & auto-transitions
+## Context
 
-When entering a state, an entry action can be triggered by setting a function the `entry` attribute of a state configuration. It provides access to the internal `send()` function, allowing you to define auto-transitions when entering a state. These auto-transitions are event triggered on the initial state.
+The library also allows for 'extended finite state machine', or in other words: context aware state machines. You can define an intial 'context' as a third parameter in the `fsm` function. You can access the values via the `.context` attribute of the resulting machine.
+
+```js
+import { fsm } from 'crinkles/fsm';
+const machine = fsm('green', config, { count: 0 });
+// machine.context.count === 0
+```
+
+## Actions and action creators
+
+You are able to define 'actions'. Currently, only entry actions are supported. These actions are executed at the end of a transition, and allow you enhance your state machine. They are defined by providing a function to a state in the configuration. All actions have access to the state machine's internal context.
 
 ```js
 const config = {
-  left: {
-    on: { CHANGE: 'right' },
-    entry: (send) => send('CHANGE', { delay: 3000 }),
+  green: { on: { CHANGE: 'red' } },
+  red: {
+    entry: (ctx) => {
+      console.log(ctx);
+    },
   },
-  right: {
-    on: { CHANGE: 'left' },
-    entry: (send) => send('CHANGE', { delay: 3000 }),
+};
+```
+
+In addition to flat actions, there are also several 'action creators'. These are helper functions that let the machine know, that it needs to execute additional functions within the action.
+
+### `send` action creator
+
+The `send` action creator allows you to automatically fire a new (delayed) transition on entry of a state.
+
+```js
+import { send } from '@crinkles/fsm';
+const config = {
+  green: { on: { CHANGE: 'red' } },
+  red: {
+    on: { CHANGE: 'green' },
+    entry: () => send({ event: 'CHANGE', delay: 3000 }),
+  },
+};
+```
+
+> NOTE: it is important that the 'return' value of the 'entry' action is the action creator
+
+### `assign` action creator
+
+The `assign` action creator allows you to update the context of the machine. It can use the current context of the machine, or the values that are send as a third parameter in the `machine.send(event, delay, values)` function.
+
+```js
+import { assign } from '@crinkles/fsm';
+
+const config = {
+  green: { on: { CHANGE: 'yellow' } },
+  yellow: {
+    on: { CHANGE: 'red' },
+    entry: (ctx) => assign({ count: ctx.count + 1 }),
+  },
+  yellow: {
+    on: { CHANGE: 'green' },
+    entry: (ctx, values) => assign({ count: ctx.count + values.count }),
   },
 };
 
-const machine = fsm('left', config);
-// machine.current = 'left', after 3000ms, it will be 'right'
+// { count: 2 } corresponds with the 'values' in the entry action of the red state
+machine.send('CHANGE', 0, { count: 2 });
+..
 ```
 
-When you manually invoke a transition, while a delayed auto-transition did not yet happen (e.g. within the `3000ms` delay of the above example), the auto-transition gets canceled to avoid unwanted side-effects.
+> NOTE: it is important that the 'return' value of the 'entry' action is the action creator
 
-As the machines of this library are context unaware, you can send an `object` as a third parameter in the `.send()` object. This added context is provided as a second parameter in an entry action definition. This allows you to create conditional auto-transitions.
+### Multiple action creators on entry
+
+You can also invoke multiple action creators in an entry action.
 
 ```js
-function myEntryAction(send, ctx) {
-  if (ctx.isAdmin) send('SUDO');
-  else send('ERROR');
-}
+import { assign, send } from '@crinkles/fsm';
 
-machine.send('START', {}, { isAdmin: true });
+const config = {
+  green: {
+    on: { CHANGE: 'red' },
+  },
+  red: {
+    on: { CHANGE: 'green' },
+    entry: (ctx, event) => [
+      assign({ count: ctx.count + 1 + event.count }),
+      send({ event: 'CHANGE', delay: 3000 }),
+    ],
+  },
+};
 ```
+
+> NOTE: it is important that the 'return' value of the 'entry' action is an array of action creators
 
 ## Guarded transitions
 
-Transitions can also be guarded. This allows you to add aa condition that needs to pass, in order for the transition to successfully fire. Similar to entry actions, the context object as the third parameter of the `send()` can be used allow the guard to operate based on the context. Only when the result is `true`, will the transition happen.
+Transitions can also be guarded. This allows you to add a condition that needs to pass, in order for the transition to successfully fire. Guards are basically functions that should return a boolean. They have access to the interal context of the machine.
 
 ```js
 const config = {
@@ -88,11 +148,6 @@ const config = {
   },
   end: {},
 };
-
-const machine = fsm('start', config);
-machine.send('CHANGE'); // will result in no changes
-machine.send('CHANGE', {}, { allowed: false }); // will result in no changes
-machine.send('CHANGE', {}, { allowed: true }); // will result changes
 ```
 
 ## React Hook example
@@ -102,9 +157,9 @@ import { fsm } from '@crinkles/fsm';
 import { useLayoutEffect, useReducer, useRef } from 'react';
 
 // Define the hook, with query for computed parameters
-export default function useFsm(initial, config) {
+export default function useFsm(initial, config, context) {
   const [, rerender] = useReducer((c) => c + 1, 0);
-  const value = useRef(fsm(initial, config));
+  const value = useRef(fsm(initial, config, context));
 
   useLayoutEffect(() => {
     value.current.listen(rerender);

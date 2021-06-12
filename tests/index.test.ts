@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { fsm } from '../src';
+import { fsm, send, assign } from '../src';
 
 function delay(ms = 0) {
   return new Promise((resolve) => {
@@ -84,15 +84,15 @@ test('Entry actions - auto-transition', async () => {
     green: { on: { CHANGE: 'yellow' } },
     yellow: {
       on: { CHANGE: 'red' },
-      entry: (s: Function) => s('CHANGE'),
+      entry: () => send({ event: 'CHANGE' }),
     },
     red: {
       on: { CHANGE: 'green' },
-      entry: (s: Function) => s('CHANGE', { delay: 100 }),
+      entry: () => send({ event: 'CHANGE', delay: 100 }),
     },
   };
 
-  const service = fsm('green', configAutomatic);
+  const service = fsm<{}>('green', configAutomatic);
   expect(service.current).toBe('green');
   service.send('CHANGE');
   expect(service.current).toBe('red');
@@ -104,33 +104,117 @@ test('Entry actions - auto-transition on initial state', () => {
   const configStart = {
     start: {
       on: { CHANGE: 'end' },
-      entry: (s: Function) => s('CHANGE'),
+      entry: () => send({ event: 'CHANGE' }),
     },
     end: {},
   };
 
-  const service = fsm('start', configStart);
+  const service = fsm<{}>('start', configStart);
   expect(service.current).toBe('end');
 });
 
-test('Guard - guarded transition', () => {
+test('Entry actions - update context', () => {
+  type Context = { count: number };
+
+  const configStart = {
+    start: {
+      on: { CHANGE: 'end' },
+    },
+    end: {
+      entry: (ctx: Context) => assign({ count: ctx.count + 1 }),
+    },
+  };
+
+  const service = fsm<Context>('start', configStart, { count: 0 });
+  expect(service.context.count).toBe(0);
+  service.send('CHANGE');
+  expect(service.current).toBe('end');
+  expect(service.context.count).toBe(1);
+});
+
+test('Entry actions - update context based on transition input', () => {
+  type Context = { count: number };
+  type Obj = { count: number };
+
+  const configStart = {
+    start: {
+      on: { CHANGE: 'end' },
+    },
+    end: {
+      entry: (ctx: Context, obj: unknown) =>
+        assign({ count: ctx.count + (obj as Obj)?.count || 0 } as Context),
+    },
+  };
+
+  const service = fsm<Context>('start', configStart, { count: 0 });
+  expect(service.context.count).toBe(0);
+  service.send('CHANGE', 0, { count: 2 });
+  expect(service.current).toBe('end');
+  expect(service.context.count).toBe(2);
+});
+
+test('Entry actions - multiple actions', () => {
+  type Context = { count: number };
+
+  const configStart = {
+    start: {
+      on: { CHANGE: 'middle' },
+    },
+    middle: {
+      on: { CHANGE: 'end' },
+      entry: (ctx: Context) => [
+        assign({ count: ctx.count + 1 }),
+        send({ event: 'CHANGE' }),
+      ],
+    },
+    end: {},
+  };
+
+  const service = fsm<Context>('start', configStart, { count: 0 });
+  expect(service.context.count).toBe(0);
+  service.send('CHANGE');
+  expect(service.context.count).toBe(1);
+  expect(service.current).toBe('end');
+});
+
+test('Guard - allowed', () => {
+  type Context = { allowed: boolean };
+
   const config = {
     green: {
       on: {
         CHANGE: {
           target: 'yellow',
-          guard: (u: { allowed?: boolean }) => u.allowed as boolean,
+          guard: (c) => c.allowed,
         },
       },
     },
     yellow: {},
   };
 
-  const service = fsm('green', config);
+  const service = fsm<Context>('green', config, { allowed: true });
+  expect(service.current).toBe('green');
+  service.send('CHANGE');
+  expect(service.current).toBe('yellow');
+});
+
+test('Guard - allowed', () => {
+  type Context = { allowed: boolean };
+
+  const config = {
+    green: {
+      on: {
+        CHANGE: {
+          target: 'yellow',
+          guard: (c) => c.allowed,
+        },
+      },
+    },
+    yellow: {},
+  };
+
+  const service = fsm<Context>('green', config, { allowed: false });
+  expect(service.current).toBe('green');
   service.send('CHANGE');
   expect(service.current).toBe('green');
-  service.send('CHANGE', {}, { allowed: false });
-  expect(service.current).toBe('green');
-  service.send('CHANGE', {}, { allowed: true });
-  expect(service.current).toBe('yellow');
 });
