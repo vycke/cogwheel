@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { fsm, send, assign } from '../src';
-import { Action, ActionFn } from '../src/types';
+import { Action } from '../src/types';
 
 function delay(ms = 0) {
   return new Promise((resolve) => {
