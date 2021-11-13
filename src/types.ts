@@ -20,11 +20,16 @@ export type State<T extends object> = {
   entry?: SingleArray<Action<T>>;
 };
 
-export type Listener = (source: string, target: string, event: string) => void;
+export type Listener<T> = (
+  source: string,
+  target: string,
+  event: string,
+  context: T
+) => void;
 
 export type Machine<T> = {
   current: string;
   send(event: string, delay?: number, values?: unknown): void;
   context: T;
-  listen(listener?: Listener): void;
+  listen(listener?: Listener<T>): void;
 };

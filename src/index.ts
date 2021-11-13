@@ -32,7 +32,7 @@ export function fsm<T extends object>(
   // Throw error if initial state does not exist
   if (!config[initial]) throw Error('Initial state does not exist');
 
-  let _listener: Listener | undefined;
+  let _listener: Listener<T> | undefined;
   let _timeout: ReturnType<typeof setTimeout>;
   const _state: Machine<T> = {
     current: initial,
@@ -82,9 +82,9 @@ export function fsm<T extends object>(
 
     const oldstate = _state.current;
     _state.current = target;
-    _listener?.(oldstate, _state.current, event);
 
     executeEntryAction(config[target].entry, values);
+    _listener?.(oldstate, _state.current, event, _state.context);
   }
 
   // Invoke entry if existing on the initial state
