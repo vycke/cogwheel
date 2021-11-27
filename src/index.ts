@@ -1,27 +1,14 @@
 /* eslint-disable @typescript-eslint/ban-types */
+import { assign, invokeAction, send } from './actions';
 import {
   Action,
   ActionTypes,
-  ActionFn,
+  Assign,
   State,
   Machine,
   Listener,
-  SingleArray,
   Transition,
 } from './types';
-
-// Action creator
-export function send<T extends object>(
-  event: string,
-  delay?: number
-): Action<T> {
-  return { type: ActionTypes.send, event, delay };
-}
-
-// Action creator
-export function assign<T extends object>(assigner: ActionFn<T>): Action<T> {
-  return { type: ActionTypes.assign, action: assigner };
-}
 
 // wrap a machine in a service
 export function fsm<T extends object>(
@@ -41,6 +28,7 @@ export function fsm<T extends object>(
     listen: (l) => (_listener = l),
   };
 
+  // find and transform transition based on config
   function find(event: string): Transition<T> {
     const transition = config[_state.current].on?.[event];
     if (typeof transition === 'string') return { target: transition };
@@ -54,41 +42,42 @@ export function fsm<T extends object>(
     else transition(event, values);
   }
 
-  //
-  function executeAction(creator: Action<T>, values?: unknown): void {
+  // internal function to execute an action
+  function execute(creator: Action<T>, values?: unknown): void {
     if (creator.type === ActionTypes.send)
       send(creator.event as string, creator.delay as number | undefined);
     if (creator.type === ActionTypes.assign && creator.action)
-      _state.context = (creator.action as ActionFn<T>)(_state.context, values);
-  }
-
-  // function to execture various actions
-  function executeEntryAction(
-    entry?: SingleArray<Action<T>>,
-    values?: unknown
-  ): void {
-    if (!entry) return;
-    if (Array.isArray(entry)) entry.forEach((e) => executeAction(e, values));
-    else executeAction(entry, values);
+      _state.context = (creator.action as Assign<T>)(_state.context, values);
   }
 
   // function to execute the state machine
   function transition(event: string, values?: unknown) {
-    const { target, guard } = find(event);
+    const { target, guard, actions } = find(event);
 
     // invalid end result or guard holds result
     if (!config[target]) return;
     if (guard && !guard(_state.context)) return;
 
+    // Invoke exit effects
+    invokeAction(execute, config[_state.current].exit, values);
+    // Invoke transition effects
+    invokeAction(execute, actions, values);
+
+    // update state
     const oldstate = _state.current;
     _state.current = target;
 
-    executeEntryAction(config[target].entry, values);
-    _listener?.(oldstate, _state.current, event, _state.context);
+    // Invoke entry effects
+    invokeAction(execute, config[target].entry, values);
+    const { current, context } = _state;
+    _listener?.(event, oldstate, { current, context });
   }
 
   // Invoke entry if existing on the initial state
-  executeEntryAction(config[initial].entry);
+  invokeAction(execute, config[initial].entry);
 
   return new Proxy(_state, { set: () => true });
 }
+
+// Export action creators
+export { send, assign };

@@ -10,7 +10,7 @@ Simple finite state machines that can be used for state/process management.
 
 ## Getting started
 
-A simple state machine can be initiated using the `fsm` function from the package. It allows you to view the current state (`machine.current`), or invoke a transition via the `.send(event: string)` function, with an optional `delay` .
+A simple state machine can be initiated using the `fsm` function from the package. It allows you to view the current state (`machine.current`), or invoke a transition via the `.send(event: string, delay?: number, values?: object)` function. `delay` and `values` are optional input parameters.
 
 ```js
 import { fsm } from '@crinkles/fsm';
@@ -23,7 +23,7 @@ const config = {
 
 const machine = fsm('green', config);
 // machine.current = 'green'
-machine.send('CHANGE', 3000);
+machine.send('CHANGE', 3000, { key: 'value' });
 // machine.current = 'yellow'
 ```
 
@@ -32,8 +32,8 @@ machine.send('CHANGE', 3000);
 A single listener can be registered on each machine, allowing you to invoke additional side-effects based on the source state, target state and invoked event. The listener will be invoked on each successful transition.
 
 ```js
-function listener(source, target, event) {
-  console.log(source, target, event);
+function listener(event, source, state) {
+  console.log(event, source, state);
 }
 
 machine.listen(listener);
@@ -51,14 +51,26 @@ const machine = fsm('green', config, { count: 0 });
 
 ## Actions and action creators
 
-You are able to define 'actions'. Currently, only entry actions are supported. These actions are executed at the end of a transition, and allow you enhance your state machine. They are defined by providing a function to a state in the configuration. All actions have access to the state machine's internal context.
+You are able to define 'actions'. Currently, only entry actions are supported. These actions are executed when you leave a state (after guard checks), when you enter a state, or when a transition is executed. They are defined by providing a function to a state in the configuration. All actions have access to the state machine's internal context, and the `values` you provide in the `.send()` action when invoking a transition.
 
 ```js
 const config = {
-  green: { on: { CHANGE: 'red' } },
+  green: {
+    on: {
+      CHANGE: {
+        target: 'red',
+        actions: (ctx, values) => {
+          console.log(ctx);
+        },
+      },
+    },
+  },
   red: {
-    entry: (ctx) => {
-      console.log(ctx);
+    entry: (ctx, values) => {
+      console.log(ctx, values);
+    },
+    exit: (ctx, values) => {
+      console.log(ctx, values);
     },
   },
 };
@@ -166,5 +178,30 @@ export default function useFsm(initial, config, context) {
   }, []); //eslint-disable-line
 
   return value.current;
+}
+```
+
+## Svelte store example
+
+```js
+import { fsm } from '@crinkles/fsm';
+import { writable } from 'svelte/store';
+
+export function fsmStore(initial, states) {
+  const machine = fsm(initial, states);
+  const { subscribe, update } = writable({
+    state: machine.current,
+    context: machine.context,
+  });
+
+  machine.listen((_e, _s, target) => {
+    update(() => ({ state: target.current, context: target.context }));
+  });
+
+  function dispatch(event, values) {
+    machine.send(event, 0, values);
+  }
+
+  return { subscribe, dispatch };
 }
 ```

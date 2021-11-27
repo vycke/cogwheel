@@ -1,6 +1,6 @@
 {
   "name": "@crinkles/fsm",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Simple state machine",
   "main": "dist/index.js",
   "module": "dist/esm/index.js",

@@ -182,6 +182,50 @@ test('Entry actions - multiple actions', () => {
   expect(service.current).toBe('end');
 });
 
+test('Exit actions - update context', () => {
+  type Context = { count: number };
+
+  const configStart = {
+    start: {
+      on: { CHANGE: 'end' },
+      exit: assign((ctx: Context) => ({
+        count: ctx.count + 1,
+      })),
+    },
+    end: {},
+  };
+
+  const service = fsm<Context>('start', configStart, { count: 0 });
+  expect(service.context.count).toBe(0);
+  service.send('CHANGE');
+  expect(service.current).toBe('end');
+  expect(service.context.count).toBe(1);
+});
+
+test('Transition actions - update context', () => {
+  type Context = { count: number };
+
+  const configStart = {
+    start: {
+      on: {
+        CHANGE: {
+          target: 'end',
+          actions: assign((ctx: Context) => ({
+            count: ctx.count + 1,
+          })),
+        },
+      },
+    },
+    end: {},
+  };
+
+  const service = fsm<Context>('start', configStart, { count: 0 });
+  expect(service.context.count).toBe(0);
+  service.send('CHANGE');
+  expect(service.current).toBe('end');
+  expect(service.context.count).toBe(1);
+});
+
 test('Guard - allowed', () => {
   type Context = { allowed: boolean };
 
