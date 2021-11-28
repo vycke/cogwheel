@@ -1,17 +1,45 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { fsm, send, assign } from '../src';
+import { Action } from '../src/types';
 
+// helper funtions
 function delay(ms = 0) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
 }
 
+// Types
+type Context = { count: number };
+
+// Default configuration
+let cb: jest.Mock;
+
 const configDefault = {
   green: { on: { CHANGE: 'yellow' } },
   yellow: { on: { CHANGE: 'red' } },
   red: {},
 };
+
+const countAction: Action<Context> = function (
+  _s: string,
+  ctx: Context,
+  values?: unknown
+) {
+  if ((values as Context)?.count)
+    return { count: ctx.count + (values as Context).count };
+  return { count: ctx.count + 1 };
+};
+
+const logAction: Action<{}> = function (state): void {
+  cb(state);
+};
+
+// Actual tests
+
+beforeEach(() => {
+  cb = jest.fn((x) => x);
+});
 
 test('Send - existing event', () => {
   const service = fsm('green', configDefault);
@@ -66,7 +94,6 @@ test('immutability', () => {
 });
 
 test('listener', () => {
-  const cb = jest.fn((x) => x);
   const service = fsm('green', configDefault);
   service.listen(cb);
   service.send('CHANGE');
@@ -80,11 +107,10 @@ test('Incorrect initial state', () => {
 });
 
 test('General purpose action', () => {
-  const cb = jest.fn((x) => x);
   const configStart = {
     start: {
       on: { CHANGE: 'end' },
-      entry: [(s: string) => cb(s)],
+      entry: [logAction],
     },
     end: {},
   };
@@ -135,11 +161,7 @@ test('Entry actions - update context', () => {
       on: { CHANGE: 'end' },
     },
     end: {
-      entry: [
-        assign((_s: string, ctx: Context) => ({
-          count: ctx.count + 1,
-        })),
-      ],
+      entry: [assign(countAction)],
     },
   };
 
@@ -152,19 +174,13 @@ test('Entry actions - update context', () => {
 
 test('Entry actions - update context based on transition input', () => {
   type Context = { count: number };
-  type Obj = { count: number };
 
   const configStart = {
     start: {
       on: { CHANGE: 'end' },
     },
     end: {
-      entry: [
-        assign(
-          (_s: string, ctx: Context, obj: unknown) =>
-            ({ count: ctx.count + (obj as Obj)?.count || 0 } as Context)
-        ),
-      ],
+      entry: [assign(countAction)],
     },
   };
 
@@ -184,12 +200,7 @@ test('Entry actions - multiple actions', () => {
     },
     middle: {
       on: { CHANGE: 'end' },
-      entry: [
-        assign<Context>(
-          (_s: string, ctx: Context) => ({ count: ctx.count + 1 } as Context)
-        ),
-        send<Context>('CHANGE'),
-      ],
+      entry: [assign(countAction), send<Context>('CHANGE')],
     },
     end: {},
   };
@@ -207,11 +218,7 @@ test('Exit actions - update context', () => {
   const configStart = {
     start: {
       on: { CHANGE: 'end' },
-      exit: [
-        assign((_s: string, ctx: Context) => ({
-          count: ctx.count + 1,
-        })),
-      ],
+      exit: [assign(countAction)],
     },
     end: {},
   };
@@ -231,11 +238,7 @@ test('Transition actions - update context', () => {
       on: {
         CHANGE: {
           target: 'end',
-          actions: [
-            assign((_s: string, ctx: Context) => ({
-              count: ctx.count + 1,
-            })),
-          ],
+          actions: [assign(countAction)],
         },
       },
     },

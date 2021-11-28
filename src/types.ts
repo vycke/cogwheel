@@ -5,8 +5,8 @@ export enum ActionTypes {
 }
 
 export type Action<T extends object> = (
-  state?: string,
-  context?: T,
+  state: string,
+  context: T,
   values?: unknown
 ) => void | T;
 
