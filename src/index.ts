@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { assign, invokeAction, send } from './actions';
+import { assign, send } from './actions';
 import {
   Action,
   ActionTypes,
-  Assign,
   State,
   Machine,
-  Listener,
   Transition,
+  ActionList,
+  ActionObject,
 } from './types';
 
 // wrap a machine in a service
@@ -19,7 +19,7 @@ export function fsm<T extends object>(
   // Throw error if initial state does not exist
   if (!config[initial]) throw Error('Initial state does not exist');
 
-  let _listener: Listener<T> | undefined;
+  let _listener: Action<T> | undefined;
   let _timeout: ReturnType<typeof setTimeout>;
   const _state: Machine<T> = {
     current: initial,
@@ -36,46 +36,62 @@ export function fsm<T extends object>(
   }
 
   // Execution of a send action
-  function send(event: string, delay?: number, values?: unknown): void {
+  function send(
+    event: string,
+    values?: unknown,
+    delay?: number
+  ): boolean | void {
     clearTimeout(_timeout);
     if (delay) _timeout = setTimeout(() => transition(event, values), delay);
     else transition(event, values);
   }
 
-  // internal function to execute an action
-  function execute(creator: Action<T>, values?: unknown): void {
-    if (creator.type === ActionTypes.send)
-      send(creator.event as string, creator.delay as number | undefined);
-    if (creator.type === ActionTypes.assign && creator.action)
-      _state.context = (creator.action as Assign<T>)(_state.context, values);
+  // function to execute actions within a machine
+  function execute(actions?: ActionList<T>, values?: unknown): void {
+    if (!actions) return;
+    // Run over all actions
+    for (const action of actions) {
+      const _a = action as ActionObject<T>;
+      switch (_a.type) {
+        case ActionTypes.assign:
+          const fn = _a.invoke as Action<T>;
+          _state.context = fn(_state.current, _state.context, values) as T;
+          break;
+        case ActionTypes.send:
+          const { event, delay } = _a.meta;
+          send(event as string, values, delay as number | undefined);
+          break;
+        default:
+          (action as Action<T>)(_state.current, _state.context, values);
+          break;
+      }
+    }
   }
 
   // function to execute the state machine
-  function transition(event: string, values?: unknown) {
+  function transition(event: string, values?: unknown): boolean {
     const { target, guard, actions } = find(event);
 
     // invalid end result or guard holds result
-    if (!config[target]) return;
-    if (guard && !guard(_state.context)) return;
+    if (!config[target]) return false;
+    if (guard && !guard(_state.context)) return false;
 
     // Invoke exit effects
-    invokeAction(execute, config[_state.current].exit, values);
+    execute(config[_state.current].exit, values);
     // Invoke transition effects
-    invokeAction(execute, actions, values);
+    execute(actions, values);
 
     // update state
-    const oldstate = _state.current;
     _state.current = target;
 
     // Invoke entry effects
-    invokeAction(execute, config[target].entry, values);
-    const { current, context } = _state;
-    _listener?.(event, oldstate, { current, context });
+    execute(config[_state.current].entry, values);
+    _listener?.(_state.current, _state.context);
+    return true;
   }
 
   // Invoke entry if existing on the initial state
-  invokeAction(execute, config[initial].entry);
-
+  execute(config[initial].entry);
   return new Proxy(_state, { set: () => true });
 }
 

@@ -3,37 +3,37 @@ export enum ActionTypes {
   send,
   assign,
 }
-export type SingleArray<T> = T[] | T;
+
+export type Action<T extends object> = (
+  state?: string,
+  context?: T,
+  values?: unknown
+) => void | T;
+
+export type ActionObject<T extends object> = {
+  type: ActionTypes;
+  invoke?: Action<T>;
+  meta: { [key: string]: unknown };
+};
+
+export type ActionList<T extends object> = (ActionObject<T> | Action<T>)[];
 
 export type Guard<T> = (context: T) => boolean;
 export type Transition<T extends object> = {
   target: string;
   guard?: Guard<T>;
-  actions?: SingleArray<Action<T>>;
-};
-
-export type Assign<T extends object> = (ctx: T, values?: unknown) => T;
-export type Action<T extends object> = {
-  type: ActionTypes;
-  action?: Assign<T>;
-  [key: string]: unknown;
+  actions?: (ActionObject<T> | Action<T>)[];
 };
 
 export type State<T extends object> = {
   on?: { [key: string]: string | Transition<T> };
-  entry?: SingleArray<Action<T>>;
-  exit?: SingleArray<Action<T>>;
+  entry?: (ActionObject<T> | Action<T>)[];
+  exit?: (ActionObject<T> | Action<T>)[];
 };
 
-export type Listener<T> = (
-  event: string,
-  source: string,
-  state: { current: string; context: T }
-) => void;
-
-export type Machine<T> = {
+export type Machine<T extends object> = {
   current: string;
-  send(event: string, delay?: number, values?: unknown): void;
+  send(event: string, values?: unknown, delay?: number): void;
   context: T;
-  listen(listener?: Listener<T>): void;
+  listen(listener?: Action<T>): void;
 };

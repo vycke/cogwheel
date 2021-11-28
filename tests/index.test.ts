@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { fsm, send, assign } from '../src';
-import { Action } from '../src/types';
 
 function delay(ms = 0) {
   return new Promise((resolve) => {
@@ -80,16 +79,30 @@ test('Incorrect initial state', () => {
   );
 });
 
+test('General purpose action', () => {
+  const cb = jest.fn((x) => x);
+  const configStart = {
+    start: {
+      on: { CHANGE: 'end' },
+      entry: [(s: string) => cb(s)],
+    },
+    end: {},
+  };
+
+  fsm<{}>('start', configStart);
+  expect(cb.mock.calls.length).toBe(1);
+});
+
 test('Entry actions - auto-transition', async () => {
   const configAutomatic = {
     green: { on: { CHANGE: 'yellow' } },
     yellow: {
       on: { CHANGE: 'red' },
-      entry: send('CHANGE'),
+      entry: [send('CHANGE')],
     },
     red: {
       on: { CHANGE: 'green' },
-      entry: send('CHANGE', 100),
+      entry: [send('CHANGE', 100)],
     },
   };
 
@@ -105,7 +118,7 @@ test('Entry actions - auto-transition on initial state', () => {
   const configStart = {
     start: {
       on: { CHANGE: 'end' },
-      entry: send('CHANGE'),
+      entry: [send('CHANGE')],
     },
     end: {},
   };
@@ -122,9 +135,11 @@ test('Entry actions - update context', () => {
       on: { CHANGE: 'end' },
     },
     end: {
-      entry: assign((ctx: Context) => ({
-        count: ctx.count + 1,
-      })),
+      entry: [
+        assign((_s: string, ctx: Context) => ({
+          count: ctx.count + 1,
+        })),
+      ],
     },
   };
 
@@ -144,16 +159,18 @@ test('Entry actions - update context based on transition input', () => {
       on: { CHANGE: 'end' },
     },
     end: {
-      entry: assign(
-        (ctx: Context, obj: unknown) =>
-          ({ count: ctx.count + (obj as Obj)?.count || 0 } as Context)
-      ),
+      entry: [
+        assign(
+          (_s: string, ctx: Context, obj: unknown) =>
+            ({ count: ctx.count + (obj as Obj)?.count || 0 } as Context)
+        ),
+      ],
     },
   };
 
   const service = fsm<Context>('start', configStart, { count: 0 });
   expect(service.context.count).toBe(0);
-  service.send('CHANGE', 0, { count: 2 });
+  service.send('CHANGE', { count: 2 });
   expect(service.current).toBe('end');
   expect(service.context.count).toBe(2);
 });
@@ -168,8 +185,10 @@ test('Entry actions - multiple actions', () => {
     middle: {
       on: { CHANGE: 'end' },
       entry: [
-        assign((ctx: Context) => ({ count: ctx.count + 1 } as Context)),
-        send('CHANGE') as Action<Context>,
+        assign<Context>(
+          (_s: string, ctx: Context) => ({ count: ctx.count + 1 } as Context)
+        ),
+        send<Context>('CHANGE'),
       ],
     },
     end: {},
@@ -188,9 +207,11 @@ test('Exit actions - update context', () => {
   const configStart = {
     start: {
       on: { CHANGE: 'end' },
-      exit: assign((ctx: Context) => ({
-        count: ctx.count + 1,
-      })),
+      exit: [
+        assign((_s: string, ctx: Context) => ({
+          count: ctx.count + 1,
+        })),
+      ],
     },
     end: {},
   };
@@ -210,9 +231,11 @@ test('Transition actions - update context', () => {
       on: {
         CHANGE: {
           target: 'end',
-          actions: assign((ctx: Context) => ({
-            count: ctx.count + 1,
-          })),
+          actions: [
+            assign((_s: string, ctx: Context) => ({
+              count: ctx.count + 1,
+            })),
+          ],
         },
       },
     },
