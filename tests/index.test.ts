@@ -16,8 +16,8 @@ type Context = { count: number };
 let cb: jest.Mock;
 
 const configDefault = {
-  green: { on: { CHANGE: 'yellow' } },
-  yellow: { on: { CHANGE: 'red' } },
+  green: { CHANGE: 'yellow' },
+  yellow: { CHANGE: 'red' },
   red: {},
 };
 
@@ -57,8 +57,8 @@ test('Send - non-existing event', () => {
 
 test('Send - non-existing target', () => {
   const config = {
-    green: { on: { CHANGE: 'blue' } },
-    yellow: { on: { CHANGE: 'red' } },
+    green: { CHANGE: 'blue' },
+    yellow: { CHANGE: 'red' },
     red: {},
   };
 
@@ -77,7 +77,7 @@ test('Send - state without transition definition', () => {
 
 test('Send - transition object', () => {
   const config = {
-    green: { on: { CHANGE: { target: 'yellow' } } },
+    green: { CHANGE: { target: 'yellow' } },
     yellow: {},
   };
 
@@ -109,8 +109,8 @@ test('Incorrect initial state', () => {
 test('General purpose action', () => {
   const configStart = {
     start: {
-      on: { CHANGE: 'end' },
-      entry: [logAction],
+      CHANGE: 'end',
+      _entry: [logAction],
     },
     end: {},
   };
@@ -121,14 +121,14 @@ test('General purpose action', () => {
 
 test('Entry actions - auto-transition', async () => {
   const configAutomatic = {
-    green: { on: { CHANGE: 'yellow' } },
+    green: { CHANGE: 'yellow' },
     yellow: {
-      on: { CHANGE: 'red' },
-      entry: [send('CHANGE')],
+      CHANGE: 'red',
+      _entry: [send('CHANGE')],
     },
     red: {
-      on: { CHANGE: 'green' },
-      entry: [send('CHANGE', 100)],
+      CHANGE: 'green',
+      _entry: [send('CHANGE', 100)],
     },
   };
 
@@ -143,8 +143,8 @@ test('Entry actions - auto-transition', async () => {
 test('Entry actions - auto-transition on initial state', () => {
   const configStart = {
     start: {
-      on: { CHANGE: 'end' },
-      entry: [send('CHANGE')],
+      _entry: [send('CHANGE')],
+      CHANGE: 'end',
     },
     end: {},
   };
@@ -157,11 +157,9 @@ test('Entry actions - update context', () => {
   type Context = { count: number };
 
   const configStart = {
-    start: {
-      on: { CHANGE: 'end' },
-    },
+    start: { CHANGE: 'end' },
     end: {
-      entry: [assign(countAction)],
+      _entry: [assign(countAction)],
     },
   };
 
@@ -176,11 +174,9 @@ test('Entry actions - update context based on transition input', () => {
   type Context = { count: number };
 
   const configStart = {
-    start: {
-      on: { CHANGE: 'end' },
-    },
+    start: { CHANGE: 'end' },
     end: {
-      entry: [assign(countAction)],
+      _entry: [assign(countAction)],
     },
   };
 
@@ -195,12 +191,10 @@ test('Entry actions - multiple actions', () => {
   type Context = { count: number };
 
   const configStart = {
-    start: {
-      on: { CHANGE: 'middle' },
-    },
+    start: { CHANGE: 'middle' },
     middle: {
-      on: { CHANGE: 'end' },
-      entry: [assign(countAction), send<Context>('CHANGE')],
+      CHANGE: 'end',
+      _entry: [assign(countAction), send<Context>('CHANGE')],
     },
     end: {},
   };
@@ -217,8 +211,8 @@ test('Exit actions - update context', () => {
 
   const configStart = {
     start: {
-      on: { CHANGE: 'end' },
-      exit: [assign(countAction)],
+      CHANGE: 'end',
+      _exit: [assign(countAction)],
     },
     end: {},
   };
@@ -235,11 +229,9 @@ test('Transition actions - update context', () => {
 
   const configStart = {
     start: {
-      on: {
-        CHANGE: {
-          target: 'end',
-          actions: [assign(countAction)],
-        },
+      CHANGE: {
+        target: 'end',
+        actions: [assign(countAction)],
       },
     },
     end: {},
@@ -257,11 +249,9 @@ test('Guard - allowed', () => {
 
   const config = {
     green: {
-      on: {
-        CHANGE: {
-          target: 'yellow',
-          guard: (c: Context) => c.allowed,
-        },
+      CHANGE: {
+        target: 'yellow',
+        guard: (c: Context) => c.allowed,
       },
     },
     yellow: {},
@@ -278,11 +268,9 @@ test('Guard - allowed', () => {
 
   const config = {
     green: {
-      on: {
-        CHANGE: {
-          target: 'yellow',
-          guard: (c: Context) => c.allowed,
-        },
+      CHANGE: {
+        target: 'yellow',
+        guard: (c: Context) => c.allowed,
       },
     },
     yellow: {},

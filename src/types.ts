@@ -22,13 +22,13 @@ export type Guard<T> = (context: T) => boolean;
 export type Transition<T extends object> = {
   target: string;
   guard?: Guard<T>;
-  actions?: (ActionObject<T> | Action<T>)[];
+  actions?: ActionList<T>;
 };
 
 export type State<T extends object> = {
-  on?: { [key: string]: string | Transition<T> };
-  entry?: (ActionObject<T> | Action<T>)[];
-  exit?: (ActionObject<T> | Action<T>)[];
+  _entry?: ActionList<T>;
+  _exit?: ActionList<T>;
+  [key: string]: string | Transition<T> | ActionList<T> | undefined;
 };
 
 export type Machine<T extends object> = {

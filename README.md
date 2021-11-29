@@ -16,9 +16,9 @@ A simple state machine can be initiated using the `fsm` function from the packag
 import { fsm } from '@crinkles/fsm';
 
 const config = {
-  green: { on: { CHANGE: 'yellow' } },
-  yellow: { on: { CHANGE: 'red' } },
-  red: { on: { CHANGE: 'green' } },
+  green: { CHANGE: 'yellow' },
+  yellow: { CHANGE: 'red' },
+  red: { CHANGE: 'green' },
 };
 
 const machine = fsm('green', config);
@@ -46,11 +46,9 @@ Transitions can also be guarded. This allows you to add a condition that needs t
 ```js
 const config = {
   start: {
-    on: {
-      CHANGE: {
-        target: 'end',
-        guard: (ctx) => ctx?.allowed,
-      },
+    CHANGE: {
+      target: 'end',
+      guard: (ctx) => ctx?.allowed,
     },
   },
   end: {},
@@ -73,27 +71,27 @@ machine.listen(listener);
 
 You are able to define 'actions'. These actions are executed when you leave a state (after guard checks), when you enter a state, or when a transition is executed. They are defined by providing a function to a state in the configuration. All actions have access to the state machine's internal context, and the `values` you provide in the `.send()` action when invoking a transition.
 
+> NOTE: `_entry` and '\_exit' are reserved transition names to provide for a simplified API.
+
 ```js
 const config = {
   green: {
-    on: {
-      CHANGE: {
-        target: 'red',
-        actions: [
-          (state, ctx, values) => {
-            console.log(state, ctx);
-          },
-        ],
-      },
+    CHANGE: {
+      target: 'red',
+      actions: [
+        (state, ctx, values) => {
+          console.log(state, ctx);
+        },
+      ],
     },
   },
   red: {
-    entry: [
+    _entry: [
       (state, ctx, values) => {
         console.log(state, ctx, values);
       },
     ],
-    exit: [
+    _exit: [
       (state, ctx, values) => {
         console.log(state, ctx, values);
       },
@@ -109,11 +107,11 @@ import { assign, send } from '@crinkles/fsm';
 
 const config = {
   green: {
-    on: { CHANGE: 'red' },
+    CHANGE: 'red',
   },
   red: {
-    on: { CHANGE: 'green' },
-    entry: [
+    CHANGE: 'green',
+    _entry: [
       (state) => {
         console.log(state);
       },
@@ -136,10 +134,10 @@ The `send` action creator allows you to automatically fire a new (delayed) trans
 ```js
 import { send } from '@crinkles/fsm';
 const config = {
-  green: { on: { CHANGE: 'red' } },
+  green: { CHANGE: 'red' },
   red: {
-    on: { CHANGE: 'green' },
-    entry: [send('CHANGE', 3000)],
+    CHANGE: 'green',
+    _entry: [send('CHANGE', 3000)],
   },
 };
 ```
@@ -152,14 +150,14 @@ The `assign` action creator allows you to update the context of the machine. It 
 import { assign } from '@crinkles/fsm';
 
 const config = {
-  green: { on: { CHANGE: 'yellow' } },
+  green: { CHANGE: 'yellow' },
   yellow: {
-    on: { CHANGE: 'red' },
-    entry: [assign((_s, ctx) => ({ count: ctx.count + 1 })),
+    CHANGE: 'red',
+    _entry: [assign((_s, ctx) => ({ count: ctx.count + 1 }))],
   },
   yellow: {
-    on: { CHANGE: 'green' },
-    entry: assign((_s, ctx, values) => ({ count: ctx.count + values.count })),
+    CHANGE: 'green',
+    _entry: assign((_s, ctx, values) => ({ count: ctx.count + values.count })),
   },
 };
 

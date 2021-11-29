@@ -30,9 +30,9 @@ export function fsm<T extends object>(
 
   // find and transform transition based on config
   function find(event: string): Transition<T> {
-    const transition = config[_state.current].on?.[event];
+    const transition = config[_state.current][event];
     if (typeof transition === 'string') return { target: transition };
-    return transition ?? { target: '' };
+    return (transition ?? { target: '' }) as Transition<T>;
   }
 
   // Execution of a send action
@@ -77,7 +77,7 @@ export function fsm<T extends object>(
     if (guard && !guard(_state.context)) return false;
 
     // Invoke exit effects
-    execute(config[_state.current].exit, values);
+    execute(config[_state.current]._exit, values);
     // Invoke transition effects
     execute(actions, values);
 
@@ -85,13 +85,13 @@ export function fsm<T extends object>(
     _state.current = target;
 
     // Invoke entry effects
-    execute(config[_state.current].entry, values);
+    execute(config[_state.current]._entry, values);
     _listener?.(_state.current, _state.context);
     return true;
   }
 
   // Invoke entry if existing on the initial state
-  execute(config[initial].entry);
+  execute(config[initial]._entry);
   return new Proxy(_state, { set: () => true });
 }
 
