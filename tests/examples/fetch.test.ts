@@ -1,51 +1,83 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { fsm, assign } from '../../src';
-import { State } from '../../src/types';
+import { Action, Machine, State } from '../../src/types';
 
-type Context = { result: unknown; errors: unknown };
+type Context = { data: object | null; errors: object | null; valid: boolean };
+type Modifier = { key: string; value: unknown };
+
+const successEntry: Action<Context> = (_s, ctx: Context, values) =>
+  assign({ ...ctx, data: values, errors: null, valid: true });
+
+const errorEntry: Action<Context> = (_s, ctx: Context, values) =>
+  assign({ ...ctx, errors: values, data: null, valid: false });
+
+const pendingEntry: Action<Context> = (_s, ctx: Context) =>
+  assign({ ...ctx, errors: null });
+
+const invalidEntry: Action<Context> = (_s, ctx: Context, values) =>
+  assign({
+    ...ctx,
+    data: {
+      ...ctx.data,
+      [(values as Modifier).key]: (values as Modifier).value,
+    },
+    valid: false,
+  });
 
 const config: Record<string, State<Context>> = {
   idle: { STARTED: 'pending' },
-  pending: { FINISHED: 'success', FAILED: 'error' },
-  success: {
-    STARTED: 'pending',
-    _entry: [(_s, ctx: Context, values) => assign({ ...ctx, data: values })],
-  },
-  error: {
-    STARTED: 'pending',
-    _entry: [(_s, ctx: Context, values) => assign({ ...ctx, errors: values })],
-  },
+  pending: { FINISHED: 'success', FAILED: 'error', _entry: [pendingEntry] },
+  success: { STARTED: 'pending', MODIFIED: 'invalid', _entry: [successEntry] },
+  invalid: { MODIFIED: 'invalid', _entry: [invalidEntry] },
+  error: { STARTED: 'pending', _entry: [errorEntry] },
 };
 
+let service: Machine<Context>;
+const init: Context = { errors: null, data: null, valid: false };
+
+beforeEach(() => {
+  service = fsm<Context>('idle', config, init);
+});
+
 test('fetch - success', () => {
-  const service = fsm<Context>('idle', config);
   expect(service.current).toBe('idle');
   service.send('STARTED');
   expect(service.current).toBe('pending');
-  expect(service.context).toEqual({});
-  service.send('FINISHED', true);
+  expect(service.context).toEqual(init);
+  service.send('FINISHED', { key: 'test' });
   expect(service.current).toBe('success');
-  expect(service.context).toEqual({ data: true });
+  expect(service.context).toEqual({
+    data: { key: 'test' },
+    errors: null,
+    valid: true,
+  });
   service.send('STARTED');
   expect(service.current).toBe('pending');
-  expect(service.context).toEqual({ data: true });
+  expect(service.context).toEqual({
+    data: { key: 'test' },
+    errors: null,
+    valid: true,
+  });
 });
 
 test('fetch - error', () => {
-  const service = fsm<Context>('idle', config);
   expect(service.current).toBe('idle');
   service.send('STARTED');
   expect(service.current).toBe('pending');
-  expect(service.context).toEqual({});
-  service.send('FAILED', true);
+  expect(service.context).toEqual(init);
+  service.send('FAILED', { key: 'required' });
   expect(service.current).toBe('error');
-  expect(service.context).toEqual({ errors: true });
+  expect(service.context).toEqual({
+    errors: { key: 'required' },
+    data: null,
+    valid: false,
+  });
   service.send('STARTED');
   expect(service.current).toBe('pending');
-  expect(service.context).toEqual({ errors: true });
+  expect(service.context).toEqual({ errors: null, data: null, valid: false });
 });
 
 test('fetch - restart (not possible)', () => {
-  const service = fsm<Context>('idle', config);
   expect(service.current).toBe('idle');
   service.send('STARTED');
   expect(service.current).toBe('pending');
@@ -54,7 +86,6 @@ test('fetch - restart (not possible)', () => {
 });
 
 test('fetch - incorrect failed', () => {
-  const service = fsm<Context>('idle', config);
   expect(service.current).toBe('idle');
   service.send('STARTED');
   service.send('FINISHED');
@@ -63,8 +94,20 @@ test('fetch - incorrect failed', () => {
 });
 
 test('fetch - jump to success', () => {
-  const service = fsm<Context>('idle', config);
   expect(service.current).toBe('idle');
   service.send('FINISHED');
   expect(service.current).toBe('idle');
+});
+
+test('fetch - invalidated & refetched', () => {
+  expect(service.current).toBe('idle');
+  service.send('STARTED');
+  service.send('FINISHED', { key: 'test' });
+  service.send('MODIFIED', { key: 'key', value: 'updated' });
+  expect(service.current).toBe('invalid');
+  expect(service.context).toEqual({
+    errors: null,
+    data: { key: 'updated' },
+    valid: false,
+  });
 });
