@@ -7,6 +7,7 @@
 This state machine allows you to maintain the state of a single fetch operation (e.g. GET/POST). The context of the machine holds the data/errors (response) of the fetch, and can be used to show this information on the screen. It can be combined with caching, where each url you try to fetch is the key in the cache, and the corresponding state machine the value in the cache. By triggering the `MODIFIED` event, the cache is flagged as `invalid`, allow correct data refreshing strategies.
 
 ```js
+// ACTIONS
 const successEntry = (_s, ctx, values) =>
   assign({ ...ctx, data: values, errors: null, valid: true });
 
@@ -25,6 +26,7 @@ const invalidEntry = (_s, ctx, values) =>
     valid: false,
   });
 
+// CONFIG
 const config = {
   idle: { STARTED: 'pending' },
   pending: { FINISHED: 'success', FAILED: 'error', _entry: [pendingEntry] },
@@ -33,6 +35,7 @@ const config = {
   error: { STARTED: 'pending', _entry: [errorEntry] },
 };
 
+// EXAMPLE USAGE
 machine.send('FINISHED', data);
 machine.send('FAILED', errors);
 machine.send('MODIFIED', { key: 'test', value: 'test' });
@@ -47,8 +50,10 @@ Think of modals, sidebars, etc. that you want to appear/dissappear on the screen
 ```js
 import { send } from '@crinkles/fsm';
 
+// ACTIONS
 const toggling = (_s, ctx) => send('TOGGLE', ctx, 10);
 
+// CONFIG
 const config = {
   visible: { TOGGLE: 'closing' },
   closing: { TOGGLE: 'invisible', _entry: [toggling] },
@@ -66,6 +71,7 @@ Toast messages are a special kind of offscreen UI element. Once appeared, they w
 ```js
 import { assign, send } from '@crinkles/fsm';
 
+// CONFIG
 const config: Record<string, State<Context>> = {
   visible: {
     CLOSED: 'invisible',
@@ -78,6 +84,7 @@ const config: Record<string, State<Context>> = {
   invisible: { OPENED: 'visible' },
 };
 
+// EXAMPLE USAGE
 machine.send('OPENED', { label: 'my toast message' });
 ```
 
@@ -88,6 +95,7 @@ machine.send('OPENED', { label: 'my toast message' });
 ```js
 import { send, assign } from '@crinkles/fsm';
 
+// ACTIONS
 function validator(ctx) {
   if (ctx.values.key === 'test') return {};
   return { key: 'required' };
@@ -112,11 +120,12 @@ function validationAction(_s, ctx) {
   else return send('REJECTED', validator(ctx));
 }
 
+// CONFIG
 const config = {
   init: { LOADED: 'ready' },
   ready: {
     CHANGED: 'touched',
-    _entry: [(_s, _ctx, values) => assign({ values: values, errors: {} })],
+    _entry: [(_s, _ctx, values) => assign({ values: values, errors: null })],
   },
   touched: {
     CHANGED: 'touched',
@@ -134,8 +143,50 @@ const config = {
   },
   submitting: { FINISHED: 'ready' },
 };
+
+//EXAMPLE USAGE
+machine.send('CHANGED', { key: 'test', value: 'test' });
 ```
 
 ## Object state
 
+![](./img/object-state.png)
+
+By storing the actual state of an object, you can use the state of the object to disallow features, or rendering of elements, client-side. In addition, you can ensure optimistic UI is applied according to the available state machine corresponding to the object.
+
+```js
+const config = {
+  draft: { SUBMIT: 'pending' },
+  pending: { APPROVE: 'approved', REJECT: 'rejected' },
+  approved: { REJECT: 'rejected', PROCESS: 'processed' },
+  rejected: { SUBMIT: 'pending' },
+  processed: {},
+};
+
+function approve() {
+  if (machine.current !== 'pending') return;
+}
+```
+
 ## Authentication
+
+![](./img/authentication.png)
+
+Authentication
+
+```js
+import { send } from '@crinkles/fsm';
+
+const config = {
+  not_authenticated: { SIGNIN_STARTED: 'signing_in' },
+  signing_in: { FINISHED: 'authenticated', FAILED: 'not_authenticated' },
+  authenticated: {
+    SIGNOUT_STARTED: 'signing_out',
+    EXPIRED: 'expired',
+    _entry: (_s, ctx) => send('EXPIRED', ctx, 90000),
+  },
+  expired: { REFRESH_STARTED: 'refreshing' },
+  signing_out: { FINISHED: 'not_authenticated' },
+  refreshing: { FINISHED: 'authenticated', FAILED: 'signing_out' },
+};
+```
