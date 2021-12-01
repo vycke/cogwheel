@@ -6,6 +6,8 @@
 [![Minified size](https://img.shields.io/bundlephobia/min/@crinkles/fsm?label=minified)](https://www.npmjs.com/package/@crinkles/fsm)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+> **NOTE**: this package is still in development. Its API changes and might break with NPM updates.
+
 Simple finite state machines that can be used for state/process management.
 
 ## Getting started
@@ -41,7 +43,7 @@ const machine = fsm('green', config, { count: 0 });
 
 ## Guarded transitions
 
-Transitions can also be guarded. This allows you to add a condition that needs to pass, in order for the transition to successfully fire. Guards are basically functions that should return a boolean. They have access to the interal context of the machine.
+Transitions can also be guarded. This allows you to add a condition that needs to pass, in order for the transition to successfully fire. Guards are basically functions that should return a boolean. They have access to the interal context of the machine. When the guard evaluates as `true`, the transition is allowed.
 
 ```js
 const config = {
@@ -71,7 +73,7 @@ machine.listen(listener);
 
 You are able to define 'actions'. These actions are executed when you leave a state (after guard checks), when you enter a state, or when a transition is executed. They are defined by providing a function to a state in the configuration. All actions have access to the state machine's internal context, and the `values` you provide in the `.send()` action when invoking a transition.
 
-> NOTE: `_entry` and '\_exit' are reserved transition names to provide for a simplified API.
+> NOTE: `_entry` and `_exit` are reserved transition names to provide for a simplified API.
 
 ```js
 const config = {
@@ -100,7 +102,7 @@ const config = {
 };
 ```
 
-You can define multiple actions that should get executed in a list. These get executed in order on how they are defined. s
+You can define multiple actions that should get executed in a list. These get executed in order on how they are defined.
 
 ```js
 import { assign, send } from '@crinkles/fsm';
@@ -137,7 +139,7 @@ const config = {
   green: { CHANGE: 'red' },
   red: {
     CHANGE: 'green',
-    _entry: [send('CHANGE', 3000)],
+    _entry: [() => send('CHANGE', 3000)],
   },
 };
 ```
@@ -153,11 +155,11 @@ const config = {
   green: { CHANGE: 'yellow' },
   yellow: {
     CHANGE: 'red',
-    _entry: [assign((_s, ctx) => ({ count: ctx.count + 1 }))],
+    _entry: [(_s, ctx) => assign({ count: ctx.count + 1 })],
   },
   yellow: {
     CHANGE: 'green',
-    _entry: assign((_s, ctx, values) => ({ count: ctx.count + values.count })),
+    _entry: [(_s, ctx, values) => assign({ count: ctx.count + values.count })],
   },
 };
 

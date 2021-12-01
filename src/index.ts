@@ -1,17 +1,9 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { assign, send } from './actions';
-import {
-  Action,
-  ActionTypes,
-  State,
-  Machine,
-  Transition,
-  ActionList,
-  ActionObject,
-} from './types';
+import { Action, ActionTypes, State, Machine, Transition, O } from './types';
 
 // wrap a machine in a service
-export function fsm<T extends object>(
+export function fsm<T extends O>(
   initial: string,
   config: Record<string, State<T>>,
   context?: T
@@ -47,23 +39,17 @@ export function fsm<T extends object>(
   }
 
   // function to execute actions within a machine
-  function execute(actions?: ActionList<T>, values?: unknown): void {
+  function execute(actions?: Action<T>[], values?: unknown): void {
     if (!actions) return;
     // Run over all actions
     for (const action of actions) {
-      const _a = action as ActionObject<T>;
-      switch (_a.type) {
-        case ActionTypes.assign:
-          const fn = _a.invoke as Action<T>;
-          _state.context = fn(_state.current, _state.context, values) as T;
-          break;
-        case ActionTypes.send:
-          const { event, delay } = _a.meta;
-          send(event as string, values, delay as number | undefined);
-          break;
-        default:
-          (action as Action<T>)(_state.current, _state.context, values);
-          break;
+      const aObj = action(_state.current, _state.context, values);
+      if (!aObj) return;
+
+      if (aObj.type === ActionTypes.assign) _state.context = aObj.meta as T;
+      if (aObj.type === ActionTypes.send) {
+        const { event, delay, values: _values } = aObj.meta;
+        send(event as string, _values, delay as number | undefined);
       }
     }
   }

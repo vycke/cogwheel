@@ -4,34 +4,35 @@ export enum ActionTypes {
   assign,
 }
 
-export type Action<T extends object> = (
+export type Action<T extends O> = (
   state: string,
   context: T,
   values?: unknown
-) => void | T;
+) => void | ActionObject;
 
-export type ActionObject<T extends object> = {
-  type: ActionTypes;
-  invoke?: Action<T>;
-  meta: { [key: string]: unknown };
+export type O = {
+  [ket: string]: unknown;
 };
 
-export type ActionList<T extends object> = (ActionObject<T> | Action<T>)[];
+export type ActionObject = {
+  type: ActionTypes;
+  meta: O;
+};
 
 export type Guard<T> = (context: T) => boolean;
-export type Transition<T extends object> = {
+export type Transition<T extends O> = {
   target: string;
   guard?: Guard<T>;
-  actions?: ActionList<T>;
+  actions?: Action<T>[];
 };
 
-export type State<T extends object> = {
-  _entry?: ActionList<T>;
-  _exit?: ActionList<T>;
-  [key: string]: string | Transition<T> | ActionList<T> | undefined;
+export type State<T extends O> = {
+  _entry?: Action<T>[];
+  _exit?: Action<T>[];
+  [key: string]: string | Transition<T> | Action<T>[] | undefined;
 };
 
-export type Machine<T extends object> = {
+export type Machine<T extends O> = {
   current: string;
   send(event: string, values?: unknown, delay?: number): void;
   context: T;
