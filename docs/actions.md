@@ -91,3 +91,5 @@ function listener(state, context) {
 
 machine.listen(listener);
 ```
+
+## [Next: front-end framework implementation](./front-end-frameworks.md)

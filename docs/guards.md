@@ -13,3 +13,5 @@ const config = {
   end: {},
 };
 ```
+
+## [Next: actions](./actions.md)

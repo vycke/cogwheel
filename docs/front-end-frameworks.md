@@ -41,3 +41,5 @@ export function fsmStore(initial, states) {
   return { subscribe, send: machine.send };
 }
 ```
+
+## [Next: state machine examples](./examples.md)

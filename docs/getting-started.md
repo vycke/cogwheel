@@ -28,3 +28,5 @@ import { fsm } from 'crinkles/fsm';
 const machine = fsm('green', config, { count: 0 });
 // machine.context.count === 0
 ```
+
+## [Next: guards](./guards.md)
