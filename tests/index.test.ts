@@ -1,13 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { fsm, send, assign } from '../src';
 import { Action } from '../src/types';
-
-// helper funtions
-function delay(ms = 0) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
+import { delay } from './helpers';
 
 // Types
 type Context = { count: number };
@@ -21,14 +15,14 @@ const configDefault = {
   red: {},
 };
 
-const countAction: Action<Context> = function (
+const countAssign: Action<Context> = function (
   _s: string,
   ctx: Context,
   values?: unknown
 ) {
   if ((values as Context)?.count)
-    return { count: ctx.count + (values as Context).count };
-  return { count: ctx.count + 1 };
+    return assign({ count: ctx.count + (values as Context).count });
+  return assign({ count: ctx.count + 1 });
 };
 
 const logAction: Action<{}> = function (state): void {
@@ -36,7 +30,6 @@ const logAction: Action<{}> = function (state): void {
 };
 
 // Actual tests
-
 beforeEach(() => {
   cb = jest.fn((x) => x);
 });
@@ -124,11 +117,11 @@ test('Entry actions - auto-transition', async () => {
     green: { CHANGE: 'yellow' },
     yellow: {
       CHANGE: 'red',
-      _entry: [send('CHANGE')],
+      _entry: [() => send('CHANGE')],
     },
     red: {
       CHANGE: 'green',
-      _entry: [send('CHANGE', 100)],
+      _entry: [() => send('CHANGE', {}, 100)],
     },
   };
 
@@ -143,7 +136,7 @@ test('Entry actions - auto-transition', async () => {
 test('Entry actions - auto-transition on initial state', () => {
   const configStart = {
     start: {
-      _entry: [send('CHANGE')],
+      _entry: [() => send('CHANGE')],
       CHANGE: 'end',
     },
     end: {},
@@ -159,7 +152,7 @@ test('Entry actions - update context', () => {
   const configStart = {
     start: { CHANGE: 'end' },
     end: {
-      _entry: [assign(countAction)],
+      _entry: [countAssign],
     },
   };
 
@@ -176,7 +169,7 @@ test('Entry actions - update context based on transition input', () => {
   const configStart = {
     start: { CHANGE: 'end' },
     end: {
-      _entry: [assign(countAction)],
+      _entry: [countAssign],
     },
   };
 
@@ -194,7 +187,7 @@ test('Entry actions - multiple actions', () => {
     start: { CHANGE: 'middle' },
     middle: {
       CHANGE: 'end',
-      _entry: [assign(countAction), send<Context>('CHANGE')],
+      _entry: [countAssign, () => send('CHANGE')],
     },
     end: {},
   };
@@ -212,7 +205,7 @@ test('Exit actions - update context', () => {
   const configStart = {
     start: {
       CHANGE: 'end',
-      _exit: [assign(countAction)],
+      _exit: [countAssign],
     },
     end: {},
   };
@@ -231,7 +224,7 @@ test('Transition actions - update context', () => {
     start: {
       CHANGE: {
         target: 'end',
-        actions: [assign(countAction)],
+        actions: [countAssign],
       },
     },
     end: {},
@@ -263,7 +256,7 @@ test('Guard - allowed', () => {
   expect(service.current).toBe('yellow');
 });
 
-test('Guard - allowed', () => {
+test('Guard - not allowed', () => {
   type Context = { allowed: boolean };
 
   const config = {

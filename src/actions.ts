@@ -1,15 +1,16 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { ActionObject, Action, ActionTypes } from './types';
+import { ActionObject, ActionTypes, O } from './types';
 
 // Action creator
-export function send<T extends object>(
+export function send(
   event: string,
+  values?: unknown,
   delay?: number
-): ActionObject<T> {
-  return { type: ActionTypes.send, meta: { event, delay } };
+): ActionObject {
+  return { type: ActionTypes.send, meta: { event, values, delay } };
 }
 
 // Action creator
-export function assign<T extends object>(action: Action<T>): ActionObject<T> {
-  return { type: ActionTypes.assign, invoke: action, meta: {} };
+export function assign<T extends O>(ctx: T): ActionObject {
+  return { type: ActionTypes.assign, meta: ctx };
 }
