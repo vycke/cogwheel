@@ -72,7 +72,7 @@ Toast messages are a special kind of offscreen UI element. Once appeared, they w
 import { assign, send } from '@crinkles/fsm';
 
 // CONFIG
-const config: Record<string, State<Context>> = {
+const config = {
   visible: {
     CLOSED: 'invisible',
     OPENED: 'visible',
