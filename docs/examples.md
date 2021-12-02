@@ -172,7 +172,7 @@ function approve() {
 
 ![](./img/authentication.png)
 
-Authentication
+Authentication, especially token-based authentication has several steps and paths that can be modelled in a state machine. This machine can be used to guard routes, rendering, and invoke the correct actions (e.g. send a signout signal to a server to terminate a session).
 
 ```js
 import { send } from '@crinkles/fsm';
