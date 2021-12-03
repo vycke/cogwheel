@@ -55,12 +55,12 @@ export function fsm<T extends O>(
   }
 
   // function to execute the state machine
-  function transition(event: string, values?: unknown): boolean {
+  function transition(event: string, values?: unknown): string {
     const { target, guard, actions } = find(event);
 
     // invalid end result or guard holds result
-    if (!config[target]) return false;
-    if (guard && !guard(_state.context)) return false;
+    if (!config[target]) return _state.current;
+    if (guard && !guard(_state.context)) return _state.current;
 
     // Invoke exit effects
     execute(config[_state.current]._exit, values);
@@ -73,7 +73,7 @@ export function fsm<T extends O>(
     // Invoke entry effects
     execute(config[_state.current]._entry, values);
     _listener?.(_state.current, _state.context);
-    return true;
+    return _state.current;
   }
 
   // Invoke entry if existing on the initial state
