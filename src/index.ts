@@ -35,7 +35,7 @@ export function fsm<T extends O>(
   ): boolean | void {
     clearTimeout(_timeout);
     if (delay) _timeout = setTimeout(() => transition(event, values), delay);
-    else transition(event, values);
+    else return transition(event, values);
   }
 
   // function to execute actions within a machine
