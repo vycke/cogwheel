@@ -80,16 +80,17 @@ const config = {
 machine.send('CHANGE', { count: 2 });
 ```
 
-## Listener action
+## Listeners
 
-The listener action is a special single purpose action. It is an action that is executed on each succesful state transition.
+Listeners are special actions that trigger on each successful transition of the machine. You can have multiple listeners on the machine.
 
 ```js
 function listener(state, context) {
   console.log(state, contextt);
 }
 
-machine.listen(listener);
+const remove = machine.listen(listener); // subscribe
+remove(); // remove subscription to avoid memory leaks
 ```
 
 ## [Next: front-end framework implementation](./front-end-frameworks.md)

@@ -11,13 +11,16 @@ export function fsm<T extends O>(
   // Throw error if initial state does not exist
   if (!config[initial]) throw Error('Initial state does not exist');
 
-  let _listener: Action<T> | undefined;
   let _timeout: ReturnType<typeof setTimeout>;
+  const _listeners: Action<T>[] = [];
   const _state: Machine<T> = {
     current: initial,
     send,
     context: context || ({} as T),
-    listen: (l) => (_listener = l),
+    listen: (l: Action<T>) => {
+      _listeners.push(l);
+      return () => _listeners.splice(_listeners.indexOf(l) >>> 0, 1);
+    },
   };
 
   // find and transform transition based on config
@@ -72,7 +75,7 @@ export function fsm<T extends O>(
 
     // Invoke entry effects
     execute(config[_state.current]._entry, values);
-    _listener?.(_state.current, _state.context);
+    _listeners.forEach((listener) => listener(_state.current, _state.context));
     return true;
   }
 

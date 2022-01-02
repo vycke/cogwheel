@@ -14,7 +14,8 @@ export default function useFsm(initial, config, context) {
   const value = useRef(fsm(initial, config, context));
 
   useLayoutEffect(() => {
-    value.current.listen(rerender);
+    const remove = value.current.listen(rerender);
+    return () => remove();
   }, []); //eslint-disable-line
 
   return value.current;
