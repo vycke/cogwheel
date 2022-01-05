@@ -1,9 +1,9 @@
 # Getting started
 
-A simple state machine can be initiated using the `klink` function from the package. It allows you to view the current state (`machine.current`), or invoke a transition via the `.send(event: string, delay?: number, values?: object)` function. `delay` and `values` are optional input parameters.
+A simple state machine can be initiated using the `cogwheel` function from the package. It allows you to view the current state (`machine.current`), or invoke a transition via the `.send(event: string, delay?: number, values?: object)` function. `delay` and `values` are optional input parameters.
 
 ```js
-import { machine } from 'klink';
+import { machine } from 'cogwheel';
 
 const config = {
   green: { CHANGE: 'yellow' },
@@ -21,10 +21,10 @@ The `machine.send` function returns a `boolean` showing if the transition was su
 
 ## Context
 
-The library also allows for 'extended finite state machine', or in other words: context aware state machines. You can define an intial 'context' as a third parameter in the `klink` function. You can access the values via the `.context` attribute of the resulting machine. The context is very useful when using [guards](./guards.md) or [actions](./actions.md).
+The library also allows for 'extended finite state machine', or in other words: context aware state machines. You can define an intial 'context' as a third parameter in the `cogwheel` function. You can access the values via the `.context` attribute of the resulting machine. The context is very useful when using [guards](./guards.md) or [actions](./actions.md).
 
 ```js
-import { machine } from 'klink';
+import { machine } from 'cogwheel';
 const machine = machine('green', config, { count: 0 });
 // machine.context.count === 0
 ```

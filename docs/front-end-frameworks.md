@@ -1,15 +1,15 @@
 # Front-end framework implementation
 
-The Klink library is framework agnostic. It works perfectly with frameworks like React and Svelte.
+The cogwheel library is framework agnostic. It works perfectly with frameworks like React and Svelte.
 
 ## React Hook example
 
 ```js
-import { machine } from 'klink';
+import { machine } from 'cogwheel';
 import { useLayoutEffect, useReducer, useRef } from 'react';
 
 // Define the hook, with query for computed parameters
-export default function useKlink(initial, config, context) {
+export default function usecogwheel(initial, config, context) {
   const [, rerender] = useReducer((c) => c + 1, 0);
   const value = useRef(machine(initial, config, context));
 
@@ -25,10 +25,10 @@ export default function useKlink(initial, config, context) {
 ## Svelte store example
 
 ```js
-import { machine } from 'klink';
+import { machine } from 'cogwheel';
 import { writable } from 'svelte/store';
 
-export function klinkStore(initial, states) {
+export function cogwheelStore(initial, states) {
   const machine = machine(initial, states);
   const { subscribe, update } = writable({
     state: machine.current,

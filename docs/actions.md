@@ -47,7 +47,7 @@ You are free to define actions in the way you want, but there are helper functio
 The `send(event, values, delay)` action creator allows you to automatically fire a new (delayed) transition on entry of a state.
 
 ```js
-import { send } from 'klink';
+import { send } from 'cogwheel';
 const config = {
   green: { CHANGE: 'red' },
   red: {
@@ -62,7 +62,7 @@ const config = {
 The `assign(newContext)` action creator allows you to update the context of the machine.
 
 ```js
-import { assign } from 'klink';
+import { assign } from 'cogwheel';
 
 const config = {
   green: { CHANGE: 'yellow' },

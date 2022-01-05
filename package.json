@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/crinklesio/klink.git"
+    "url": "git+https://github.com/crinklesio/coggs.git"
   },
   "keywords": [
     "fsm",
@@ -31,9 +31,9 @@
   "author": "Kevin Pennekamp <github@crinkles.io>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/crinklesio/klink/issues"
+    "url": "https://github.com/crinklesio/coggs/issues"
   },
-  "homepage": "https://github.com/crinklesio/klink#readme",
+  "homepage": "https://github.com/crinklesio/coggs#readme",
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^13.0.0",
     "@types/jest": "^26.0.23",
