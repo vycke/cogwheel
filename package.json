@@ -1,5 +1,5 @@
 {
-  "name": "klink",
+  "name": "coggs",
   "version": "1.0.0",
   "description": "Simple state machine",
   "main": "dist/index.js",
