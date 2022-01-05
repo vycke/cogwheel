@@ -48,7 +48,7 @@ machine.send('MODIFIED', { key: 'test', value: 'test' });
 Think of modals, sidebars, etc. that you want to appear/dissappear on the screen. This state machine takes into account that the element might have a transition state in which animations etc. happen.
 
 ```js
-import { send } from '@crinkles/fsm';
+import { send } from 'klink';
 
 // ACTIONS
 const toggling = (_s, ctx) => send('TOGGLE', ctx, 10);
@@ -69,7 +69,7 @@ const config = {
 Toast messages are a special kind of offscreen UI element. Once appeared, they will automatically disappear, unless they are triggered again. Manual closing of the toast message should also be possible. The context of the machine Note that this machine does not have transitional states for animation purposes.
 
 ```js
-import { assign, send } from '@crinkles/fsm';
+import { assign, send } from 'klink';
 
 // CONFIG
 const config = {
@@ -93,7 +93,7 @@ machine.send('OPENED', { label: 'my toast message' });
 ![](./img/form.png)
 
 ```js
-import { send, assign } from '@crinkles/fsm';
+import { send, assign } from 'klink';
 
 // ACTIONS
 function validator(ctx) {
@@ -175,7 +175,7 @@ function approve() {
 Authentication, especially token-based authentication has several steps and paths that can be modelled in a state machine. This machine can be used to guard routes, rendering, and invoke the correct actions (e.g. send a signout signal to a server to terminate a session).
 
 ```js
-import { send } from '@crinkles/fsm';
+import { send } from 'klink';
 
 const config = {
   not_authenticated: { SIGNIN_STARTED: 'signing_in' },

@@ -4,7 +4,7 @@ import { Action, ActionTypes, State, Machine, Transition, O } from './types';
 import { copy, freeze } from './utils';
 
 // wrap a machine in a service
-export function fsm<T extends O>(
+export function machine<T extends O>(
   initial: string,
   config: Record<string, State<T>>,
   context?: T

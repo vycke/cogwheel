@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { fsm, assign } from '../../src';
+import { machine, assign } from '../../src';
 import { Action, Machine, State } from '../../src/types';
 
 type Context = { data: object | null; errors: object | null; valid: boolean };
@@ -36,7 +36,7 @@ let service: Machine<Context>;
 const init: Context = { errors: null, data: null, valid: false };
 
 beforeEach(() => {
-  service = fsm<Context>('idle', config, init);
+  service = machine<Context>('idle', config, init);
 });
 
 test('fetch - success', () => {

@@ -1,4 +1,4 @@
-import { fsm, send } from '../../src';
+import { machine, send } from '../../src';
 import { O } from '../../src/types';
 import { delay } from '../helpers';
 
@@ -20,7 +20,7 @@ const config = {
 };
 
 test('Offscreen UI - open', async () => {
-  const service = fsm('invisible', config);
+  const service = machine('invisible', config);
   expect(service.current).toBe('invisible');
   service.send('TOGGLE');
   expect(service.current).toBe('opening');
@@ -29,7 +29,7 @@ test('Offscreen UI - open', async () => {
 });
 
 test('Offscreen UI - close', async () => {
-  const service = fsm('visible', config);
+  const service = machine('visible', config);
   expect(service.current).toBe('visible');
   service.send('TOGGLE');
   expect(service.current).toBe('closing');

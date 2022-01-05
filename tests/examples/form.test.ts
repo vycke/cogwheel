@@ -1,4 +1,4 @@
-import { fsm, send, assign } from '../../src';
+import { machine, send, assign } from '../../src';
 import { State } from '../../src/types';
 
 type O = Record<string, unknown>;
@@ -61,7 +61,7 @@ const config: Record<string, State<Context>> = {
 };
 
 test('Form - happy flow', () => {
-  const service = fsm<Context>('init', config);
+  const service = machine<Context>('init', config);
   expect(service.current).toBe('init');
   service.send('LOADED', { key: '' });
   expect(service.current).toBe('ready');
@@ -80,7 +80,7 @@ test('Form - happy flow', () => {
 });
 
 test('Form - happy flow', () => {
-  const service = fsm<Context>('init', config);
+  const service = machine<Context>('init', config);
   expect(service.current).toBe('init');
   service.send('LOADED', { key: '' });
   expect(service.current).toBe('ready');

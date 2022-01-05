@@ -1,4 +1,4 @@
-import { fsm, send } from '../../src';
+import { machine, send } from '../../src';
 import { O } from '../../src/types';
 import { delay } from '../helpers';
 
@@ -13,7 +13,7 @@ const config = {
 };
 
 test('Debounce', async () => {
-  const service = fsm('init', config);
+  const service = machine('init', config);
   expect(service.current).toBe('init');
   service.send('CHANGED');
   expect(service.current).toBe('debouncing');

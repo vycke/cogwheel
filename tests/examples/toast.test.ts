@@ -1,4 +1,4 @@
-import { assign, fsm, send } from '../../src';
+import { assign, machine, send } from '../../src';
 import { ActionObject, O, State } from '../../src/types';
 import { delay } from '../helpers';
 
@@ -22,7 +22,7 @@ const config: Record<string, State<Context>> = {
 };
 
 test('Toast - open toast', () => {
-  const service = fsm<Context>('invisible', config);
+  const service = machine<Context>('invisible', config);
   expect(service.current).toBe('invisible');
   service.send('OPENED', { label: 'message' });
   expect(service.current).toBe('visible');
@@ -30,7 +30,7 @@ test('Toast - open toast', () => {
 });
 
 test('Toast - auto close-toast', async () => {
-  const service = fsm('invisible', config);
+  const service = machine('invisible', config);
   expect(service.current).toBe('invisible');
   service.send('OPENED', { label: 'message ' });
   expect(service.current).toBe('visible');
@@ -39,7 +39,7 @@ test('Toast - auto close-toast', async () => {
 });
 
 test('Toast - manual close-toast', () => {
-  const service = fsm('invisible', config);
+  const service = machine('invisible', config);
   expect(service.current).toBe('invisible');
   service.send('OPENED', { label: 'message ' });
   expect(service.current).toBe('visible');
