@@ -1,6 +1,6 @@
 {
-  "name": "@crinkles/fsm",
-  "version": "0.12.0",
+  "name": "klink",
+  "version": "1.0.0",
   "description": "Simple state machine",
   "main": "dist/index.js",
   "module": "dist/esm/index.js",
@@ -21,19 +21,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/crinklesio/fsm.git"
+    "url": "git+https://github.com/crinklesio/klink.git"
   },
   "keywords": [
     "fsm",
     "state machine",
     "finite state machine"
   ],
-  "author": "Kevin Pennekamp <github@crinkle.dev>",
+  "author": "Kevin Pennekamp <github@crinkles.io>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/crinklesio/fsm/issues"
+    "url": "https://github.com/crinklesio/klink/issues"
   },
-  "homepage": "https://github.com/crinklesio/fsm#readme",
+  "homepage": "https://github.com/crinklesio/klink#readme",
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^13.0.0",
     "@types/jest": "^26.0.23",
