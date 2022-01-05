@@ -11,7 +11,7 @@ export type Action<T extends O> = (
 ) => void | ActionObject;
 
 export type O = {
-  [ket: string]: unknown;
+  [key: string]: unknown;
 };
 
 export type ActionObject = {

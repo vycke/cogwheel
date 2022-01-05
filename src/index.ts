@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { assign, send } from './actions';
 import { Action, ActionTypes, State, Machine, Transition, O } from './types';
+import { copy, freeze } from './utils';
 
 // wrap a machine in a service
 export function fsm<T extends O>(
@@ -16,7 +17,7 @@ export function fsm<T extends O>(
   const _state: Machine<T> = {
     current: initial,
     send,
-    context: context || ({} as T),
+    context: freeze(context || ({} as T)),
     listen: (l: Action<T>) => {
       _listeners.push(l);
       return () => _listeners.splice(_listeners.indexOf(l) >>> 0, 1);
@@ -46,10 +47,11 @@ export function fsm<T extends O>(
     if (!actions) return;
     // Run over all actions
     for (const action of actions) {
-      const aObj = action(_state.current, _state.context, values);
+      const aObj = action(_state.current, copy<T>(_state.context), values);
       if (!aObj) return;
 
-      if (aObj.type === ActionTypes.assign) _state.context = aObj.meta as T;
+      if (aObj.type === ActionTypes.assign)
+        _state.context = freeze<T>(aObj.meta as T);
       if (aObj.type === ActionTypes.send) {
         const { event, delay, values: _values } = aObj.meta;
         send(event as string, _values, delay as number | undefined);
