@@ -93,4 +93,4 @@ const remove = machine.listen(listener); // subscribe
 remove(); // remove subscription to avoid memory leaks
 ```
 
-## [Next: front-end framework implementation](./front-end-frameworks.md)
+## [Next: parallel states](./parallel-states.md)

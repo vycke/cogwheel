@@ -2,6 +2,7 @@
 import { assign, send } from './actions';
 import { Action, ActionTypes, State, Machine, Transition, O } from './types';
 import { copy, freeze } from './utils';
+import { parallel } from './parallel';
 
 // wrap a machine in a service
 export function machine<T extends O>(
@@ -86,5 +87,5 @@ export function machine<T extends O>(
   return new Proxy(_state, { set: () => true });
 }
 
-// Export action creators
-export { send, assign };
+// Export action creators & utilities
+export { send, assign, parallel };

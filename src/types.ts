@@ -38,3 +38,9 @@ export type Machine<T extends O> = {
   context: T;
   listen(listener?: Action<T>): void;
 };
+
+export type PMachine = { [key: string]: Machine<never> };
+
+export type ParallelMachine<T extends PMachine> = T & {
+  send(event: string, values?: unknown, delay?: number): void;
+};

@@ -16,6 +16,8 @@ Simple finite state machines that can be used for state/process management.
 
 ## [Actions](./docs/actions.md)
 
+## [Parallel states](./docs/parallel-states.md)
+
 ## [Front-end framework implementation](./docs/front-end-frameworks.md)
 
 ## [State machine examples](./docs/examples.md)
