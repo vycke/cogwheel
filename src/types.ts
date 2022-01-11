@@ -39,6 +39,8 @@ export type Machine<T extends O> = {
   listen(listener?: Action<T>): void;
 };
 
+// never is used as the type for the Machine is not important in this stage
+// and to avoid sending multiple generics
 export type PMachine = { [key: string]: Machine<never> };
 
 export type ParallelMachine<T extends PMachine> = T & {
