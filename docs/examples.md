@@ -8,20 +8,20 @@ This state machine allows you to maintain the state of a single fetch operation 
 
 ```js
 // ACTIONS
-const successEntry = (_s, ctx, values) =>
-  assign({ ...ctx, data: values, errors: null, valid: true });
+const successEntry = (_s, ctx, payload) =>
+  assign({ ...ctx, data: payload, errors: null, valid: true });
 
-const errorEntry = (_s, ctx, values) =>
-  assign({ ...ctx, errors: values, data: null, valid: false });
+const errorEntry = (_s, ctx, payload) =>
+  assign({ ...ctx, errors: payload, data: null, valid: false });
 
 const pendingEntry = (_s, ctx) => assign({ ...ctx, errors: null });
 
-const invalidEntry = (_s, ctx, values) =>
+const invalidEntry = (_s, ctx, payload) =>
   assign({
     ...ctx,
     data: {
       ...ctx.data,
-      [values.key]: values.value,
+      [payload.key]: payload.value,
     },
     valid: false,
   });
@@ -36,9 +36,9 @@ const config = {
 };
 
 // EXAMPLE USAGE
-machine.send('FINISHED', data);
-machine.send('FAILED', errors);
-machine.send('MODIFIED', { key: 'test', value: 'test' });
+machine.send({ type: 'FINISHED', payload: data });
+machine.send({ type: 'FAILED', payload: errors });
+machine.send({ type: 'MODIFIED', payload: { key: 'test', value: 'test' } });
 ```
 
 ## Offscreen UI elements
@@ -51,7 +51,7 @@ Think of modals, sidebars, etc. that you want to appear/dissappear on the screen
 import { send } from 'cogwheel';
 
 // ACTIONS
-const toggling = (_s, ctx) => send('TOGGLE', ctx, 10);
+const toggling = (_s, ctx) => send({ type: 'TOGGLE', payload: ctx, delay: 10 });
 
 // CONFIG
 const config = {
@@ -77,15 +77,15 @@ const config = {
     CLOSED: 'invisible',
     OPENED: 'visible',
     _entry: [
-      (_s, ctx, values) => assign({ ...ctx, ...values }),
-      (_s, ctx) => send('CLOSED', ctx, 6000),
+      (_s, ctx, payload) => assign({ ...ctx, ...payload }),
+      (_s, ctx) => send({ type: 'CLOSED', payload: ctx, delay: 6000 }),
     ],
   },
   invisible: { OPENED: 'visible' },
 };
 
 // EXAMPLE USAGE
-machine.send('OPENED', { label: 'my toast message' });
+machine.send({ type: 'OPENED', payload: { label: 'my toast message' } });
 ```
 
 ## Forms
@@ -107,16 +107,15 @@ function isValid(ctx) {
   return false;
 }
 
-function updateEntry(_s, ctx, values) {
+function updateEntry(_s, ctx, payload) {
   const _ctx = { ...ctx };
-  const _values = values;
-  _ctx.values[_values.key] = _values.value;
-  _ctx.errors[_values.key] = '';
+  _ctx.values[payload.key] = payload.value;
+  _ctx.errors[payload.key] = '';
   return assign(_ctx);
 }
 
 function validationAction(_s, ctx) {
-  if (isValid(ctx)) return send('SUBMITTED');
+  if (isValid(ctx)) return send({ type: 'SUBMITTED' });
   else return send('REJECTED', validator(ctx));
 }
 
@@ -125,7 +124,7 @@ const config = {
   init: { LOADED: 'ready' },
   ready: {
     CHANGED: 'touched',
-    _entry: [(_s, _ctx, values) => assign({ values: values, errors: null })],
+    _entry: [(_s, _ctx, pl) => assign({ values: pl, errors: null })],
   },
   touched: {
     CHANGED: 'touched',
@@ -183,7 +182,7 @@ const config = {
   authenticated: {
     SIGNOUT_STARTED: 'signing_out',
     EXPIRED: 'expired',
-    _entry: (_s, ctx) => send('EXPIRED', ctx, 90000),
+    _entry: (_s, ctx) => send({ type: 'EXPIRED', payload: ctx, delay: 90000 }),
   },
   expired: { REFRESH_STARTED: 'refreshing' },
   signing_out: { FINISHED: 'not_authenticated' },

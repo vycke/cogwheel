@@ -7,7 +7,7 @@ export enum ActionTypes {
 export type Action<T extends O> = (
   state: string,
   context: T,
-  values?: unknown
+  payload?: unknown
 ) => void | ActionObject;
 
 export type O = {
@@ -16,7 +16,7 @@ export type O = {
 
 export type ActionObject = {
   type: ActionTypes;
-  meta: O;
+  payload: O;
 };
 
 export type Guard<T> = (context: T) => boolean;
@@ -32,9 +32,15 @@ export type State<T extends O> = {
   [key: string]: string | Transition<T> | Action<T>[] | undefined;
 };
 
+export type Event = {
+  type: string;
+  payload?: unknown;
+  delay?: number;
+};
+
 export type Machine<T extends O> = {
   current: string;
-  send(event: string, values?: unknown, delay?: number): void;
+  send(event: Event): void;
   context: T;
   listen(listener?: Action<T>): void;
 };
@@ -44,5 +50,5 @@ export type Machine<T extends O> = {
 export type PMachine = { [key: string]: Machine<never> };
 
 export type ParallelMachine<T extends PMachine> = T & {
-  send(event: string, values?: unknown, delay?: number): void;
+  send(event: Event): void;
 };

@@ -1,5 +1,4 @@
 import { machine, send } from '../../src';
-import { O } from '../../src/types';
 import { delay } from '../helpers';
 
 const config = {
@@ -7,17 +6,17 @@ const config = {
   debouncing: {
     GO: 'executing',
     CHANGED: 'debouncing',
-    _entry: [(_s: string, ctx: O) => send('GO', ctx, 10)],
+    _entry: [(_s: string) => send({ type: 'GO', delay: 10 })],
   },
   executing: { FINISHED: 'init' },
 };
 
-test('Debounce', async () => {
+test('Debounce', async (): Promise<void> => {
   const service = machine('init', config);
   expect(service.current).toBe('init');
-  service.send('CHANGED');
+  service.send({ type: 'CHANGED' });
   expect(service.current).toBe('debouncing');
-  service.send('CHANGED');
+  service.send({ type: 'CHANGED' });
   expect(service.current).toBe('debouncing');
   await delay(10);
   expect(service.current).toBe('executing');

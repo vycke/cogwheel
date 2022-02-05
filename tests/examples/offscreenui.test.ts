@@ -1,9 +1,8 @@
 import { machine, send } from '../../src';
-import { O } from '../../src/types';
 import { delay } from '../helpers';
 
-function toggling(_s: string, ctx: O) {
-  return send('TOGGLE', ctx, 10);
+function toggling(_s: string) {
+  return send({ type: 'TOGGLE', delay: 10 });
 }
 
 const config = {
@@ -22,7 +21,7 @@ const config = {
 test('Offscreen UI - open', async () => {
   const service = machine('invisible', config);
   expect(service.current).toBe('invisible');
-  service.send('TOGGLE');
+  service.send({ type: 'TOGGLE' });
   expect(service.current).toBe('opening');
   await delay(10);
   expect(service.current).toBe('visible');
@@ -31,7 +30,7 @@ test('Offscreen UI - open', async () => {
 test('Offscreen UI - close', async () => {
   const service = machine('visible', config);
   expect(service.current).toBe('visible');
-  service.send('TOGGLE');
+  service.send({ type: 'TOGGLE' });
   expect(service.current).toBe('closing');
   await delay(10);
   expect(service.current).toBe('invisible');

@@ -9,7 +9,7 @@ const tail = machine({ still: { WALK: 'waggle' }, waggle: { STOP: 'still' } });
 const legs = machine({ still: { WALK: 'move' }, move: { STOP: 'still' } });
 const dog = parallel({ tail, legs });
 console.log(dog.tail.current, dog.legs.current); // 'still', 'still'
-dog.send('walk');
+dog.send({ type: 'walk' });
 console.log(dog.tail.current, dog.legs.current); // 'waggle', 'move'
 ```
 

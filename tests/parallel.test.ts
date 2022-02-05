@@ -17,7 +17,7 @@ test('Parallel - simple multi-transition', () => {
 
   expect(service.one.current).toBe('green');
   expect(service.two.current).toBe('yellow');
-  service.send('CHANGE');
+  service.send({ type: 'CHANGE' });
   expect(service.one.current).toBe('yellow');
   expect(service.two.current).toBe('red');
 });

@@ -1,9 +1,9 @@
-import { ParallelMachine, PMachine } from './types';
+import { Event, ParallelMachine, PMachine } from './types';
 
 export function parallel<T extends PMachine>(config: T): ParallelMachine<T> {
-  function send(event: string, values?: unknown, delay?: number): void {
+  function send(event: Event): void {
     Object.values(config).forEach((machine) => {
-      machine.send(event, values, delay);
+      machine.send(event);
     });
     return;
   }

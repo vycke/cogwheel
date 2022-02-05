@@ -1,6 +1,14 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { assign, send } from './actions';
-import { Action, ActionTypes, State, Machine, Transition, O } from './types';
+import {
+  Action,
+  ActionTypes,
+  State,
+  Machine,
+  Transition,
+  O,
+  Event,
+} from './types';
 import { copy, freeze } from './utils';
 import { parallel } from './parallel';
 
@@ -26,59 +34,55 @@ export function machine<T extends O>(
   };
 
   // find and transform transition based on config
-  function find(event: string): Transition<T> {
-    const transition = config[_state.current][event];
+  function find(eventName: string): Transition<T> {
+    const transition = config[_state.current][eventName];
     if (typeof transition === 'string') return { target: transition };
     return (transition ?? { target: '' }) as Transition<T>;
   }
 
   // Execution of a send action
-  function send(
-    event: string,
-    values?: unknown,
-    delay?: number
-  ): boolean | void {
+  function send(event: Event): boolean | void {
     clearTimeout(_timeout);
-    if (delay) _timeout = setTimeout(() => transition(event, values), delay);
-    else return transition(event, values);
+    if (event.delay)
+      _timeout = setTimeout(() => transition(event), event.delay);
+    else return transition(event);
   }
 
   // function to execute actions within a machine
-  function execute(actions?: Action<T>[], values?: unknown): void {
+  function execute(actions?: Action<T>[], payload?: unknown): void {
     if (!actions) return;
     // Run over all actions
     for (const action of actions) {
-      const aObj = action(_state.current, copy<T>(_state.context), values);
+      const aObj = action(_state.current, copy<T>(_state.context), payload);
       if (!aObj) return;
 
       if (aObj.type === ActionTypes.assign)
-        _state.context = freeze<T>(aObj.meta as T);
-      if (aObj.type === ActionTypes.send) {
-        const { event, delay, values: _values } = aObj.meta;
-        send(event as string, _values, delay as number | undefined);
-      }
+        _state.context = freeze<T>(aObj.payload as T);
+      if (aObj.type === ActionTypes.send) send(aObj.payload as Event);
     }
   }
 
   // function to execute the state machine
-  function transition(event: string, values?: unknown): boolean {
-    const { target, guard, actions } = find(event);
+  function transition(event: Event): boolean {
+    const { target, guard, actions } = find(event.type);
 
     // invalid end result or guard holds result
     if (!config[target]) return false;
     if (guard && !guard(_state.context)) return false;
 
     // Invoke exit effects
-    execute(config[_state.current]._exit, values);
+    execute(config[_state.current]._exit, event.payload);
     // Invoke transition effects
-    execute(actions, values);
+    execute(actions, event.payload);
 
     // update state
     _state.current = target;
 
     // Invoke entry effects
-    execute(config[_state.current]._entry, values);
-    _listeners.forEach((listener) => listener(_state.current, _state.context));
+    execute(config[_state.current]._entry, event.payload);
+    _listeners.forEach((listener) =>
+      listener(_state.current, _state.context, event.payload)
+    );
     return true;
   }
 

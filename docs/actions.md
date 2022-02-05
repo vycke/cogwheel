@@ -1,9 +1,9 @@
 # Actions
 
-You are able to define 'actions'. These actions are executed when you leave a state (after guard checks), when you enter a state, or when a transition is executed. Actions can be used to invoke external side-effects (e.g. start a fetch request), or invoke changes within the state machine via an `ActionObject: { type: string, meta?: object }`. Each action takes the current state and context as input parameters. In addition, the values coming from `machine.send(...)` or via the `send` action creator (more on that later), comes as a third parameter.
+You are able to define 'actions'. These actions are executed when you leave a state (after guard checks), when you enter a state, or when a transition is executed. Actions can be used to invoke external side-effects (e.g. start a fetch request), or invoke changes within the state machine via an `ActionObject: { type: string, payload?: unknown }`. Each action takes the current state and context as input parameters. In addition, the values coming from `machine.send(...)` or via the `send` action creator (more on that later), comes as a third parameter.
 
 ```js
-const action = (state, context, values) => { ... }
+const action = (state, context, payload) => { ... }
 ```
 
 > NOTE: `_entry` and `_exit` are reserved transition names to provide for a simplified API.
@@ -14,7 +14,7 @@ const config = {
     CHANGE: {
       target: 'red',
       actions: [
-        (state, ctx, values) => {
+        (state, ctx, payload) => {
           console.log(state, ctx);
         },
       ],
@@ -22,13 +22,13 @@ const config = {
   },
   red: {
     _entry: [
-      (state, ctx, values) => {
-        console.log(state, ctx, values);
+      (state, ctx, payload) => {
+        console.log(state, ctx, payload);
       },
     ],
     _exit: [
-      (state, ctx, values) => {
-        console.log(state, ctx, values);
+      (state, ctx, payload) => {
+        console.log(state, ctx, payload);
       },
       (state) => {
         console.log(state);
@@ -44,7 +44,7 @@ You are free to define actions in the way you want, but there are helper functio
 
 ## `send` action creator
 
-The `send(event, values, delay)` action creator allows you to automatically fire a new (delayed) transition on entry of a state.
+The `send(event)` action creator allows you to automatically fire a new (delayed) transition on entry of a state.
 
 ```js
 import { send } from 'cogwheel';
@@ -72,12 +72,14 @@ const config = {
   },
   yellow: {
     CHANGE: 'green',
-    _entry: [(_s, ctx, values) => assign({ count: ctx.count + values.count })],
+    _entry: [
+      (_s, ctx, payload) => assign({ count: ctx.count + payload.count }),
+    ],
   },
 };
 
 // { count: 2 } corresponds with the 'values' in the entry action of the red state
-machine.send('CHANGE', { count: 2 });
+machine.send({ type: 'CHANGE', payload: { count: 2 } });
 ```
 
 ## Listeners

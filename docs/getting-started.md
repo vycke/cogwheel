@@ -13,7 +13,7 @@ const config = {
 
 const machine = machine('green', config);
 // machine.current = 'green'
-machine.send('CHANGE', { key: 'value' }, 3000);
+machine.send({ type: 'CHANGE', payload: { key: 'value' }, delay: 3000 });
 // machine.current = 'yellow'
 ```
 
