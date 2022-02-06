@@ -5,8 +5,17 @@ Some scenarios require having state machines run in parallel. The `parallel` hel
 ```js
 import { machine, parallel } from 'cogwheel';
 
-const tail = machine({ still: { WALK: 'waggle' }, waggle: { STOP: 'still' } });
-const legs = machine({ still: { WALK: 'move' }, move: { STOP: 'still' } });
+const legsConfig = {
+	init: 'still',
+	states: { still: { WALK: 'move' }, move: { STOP: 'still' } },
+};
+const tailConfig = {
+	init: 'still',
+	states: { still: { WALK: 'waggle' }, waggle: { STOP: 'still' } },
+};
+
+const tail = machine(tailConfig);
+const legs = machine(legsConfig);
 const dog = parallel({ tail, legs });
 console.log(dog.tail.current, dog.legs.current); // 'still', 'still'
 dog.send({ type: 'walk' });

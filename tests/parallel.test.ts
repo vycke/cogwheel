@@ -11,8 +11,8 @@ const configDefault = {
 
 test('Parallel - simple multi-transition', () => {
   const service = parallel({
-    one: machine('green', configDefault),
-    two: machine('yellow', configDefault),
+    one: machine({ init: 'green', states: configDefault }),
+    two: machine({ init: 'yellow', states: configDefault }),
   });
 
   expect(service.one.current).toBe('green');
@@ -24,11 +24,11 @@ test('Parallel - simple multi-transition', () => {
 
 test('Parallel - immutable', () => {
   const service = parallel({
-    one: machine('green', configDefault),
-    two: machine('yellow', configDefault),
+    one: machine({ init: 'green', states: configDefault }),
+    two: machine({ init: 'yellow', states: configDefault }),
   });
 
   expect(service.one.current).toBe('green');
-  service.one = machine('red', configDefault);
+  service.one = machine({ init: 'red', states: configDefault });
   expect(service.one.current).toBe('green');
 });

@@ -6,12 +6,15 @@ A simple state machine can be initiated using the `cogwheel` function from the p
 import { machine } from 'cogwheel';
 
 const config = {
-  green: { CHANGE: 'yellow' },
-  yellow: { CHANGE: 'red' },
-  red: { CHANGE: 'green' },
+  init: 'green',
+  states: {
+    green: { CHANGE: 'yellow' },
+    yellow: { CHANGE: 'red' },
+    red: { CHANGE: 'green' },
+  },
 };
 
-const machine = machine('green', config);
+const machine = machine(config);
 // machine.current = 'green'
 machine.send({ type: 'CHANGE', payload: { key: 'value' }, delay: 3000 });
 // machine.current = 'yellow'
@@ -25,7 +28,7 @@ The library also allows for 'extended finite state machine', or in other words: 
 
 ```js
 import { machine } from 'cogwheel';
-const machine = machine('green', config, { count: 0 });
+const machine = machine({ init: 'green', states, context: { count: 0 } });
 // machine.context.count === 0
 ```
 

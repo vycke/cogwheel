@@ -61,7 +61,7 @@ const config: Record<string, State<Context>> = {
 };
 
 test('Form - happy flow', () => {
-  const service = machine<Context>('init', config);
+  const service = machine<Context>({ init: 'init', states: config });
   expect(service.current).toBe('init');
   service.send({ type: 'LOADED', payload: { key: '' } });
   expect(service.current).toBe('ready');
@@ -80,7 +80,7 @@ test('Form - happy flow', () => {
 });
 
 test('Form - happy flow', () => {
-  const service = machine<Context>('init', config);
+  const service = machine<Context>({ init: 'init', states: config });
   expect(service.current).toBe('init');
   service.send({ type: 'LOADED', payload: { key: '' } });
   expect(service.current).toBe('ready');

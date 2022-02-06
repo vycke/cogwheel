@@ -4,15 +4,15 @@ export enum ActionTypes {
   assign,
 }
 
+export type O = {
+  [key: string]: unknown;
+};
+
 export type Action<T extends O> = (
   state: string,
   context: T,
   payload?: unknown
 ) => void | ActionObject;
-
-export type O = {
-  [key: string]: unknown;
-};
 
 export type ActionObject = {
   type: ActionTypes;
@@ -36,6 +36,12 @@ export type Event = {
   type: string;
   payload?: unknown;
   delay?: number;
+};
+
+export type MachineConfig<T extends O> = {
+  init: string;
+  states: Record<string, State<T>>;
+  context?: T;
 };
 
 export type Machine<T extends O> = {

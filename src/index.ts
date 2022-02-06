@@ -3,30 +3,26 @@ import { assign, send } from './actions';
 import {
   Action,
   ActionTypes,
-  State,
-  Machine,
   Transition,
   O,
   Event,
+  Machine,
+  MachineConfig,
 } from './types';
 import { copy, freeze } from './utils';
 import { parallel } from './parallel';
 
 // wrap a machine in a service
-export function machine<T extends O>(
-  initial: string,
-  config: Record<string, State<T>>,
-  context?: T
-): Machine<T> {
+export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
   // Throw error if initial state does not exist
-  if (!config[initial]) throw Error('Initial state does not exist');
+  if (!config.states[config.init]) throw Error('Initial state does not exist');
 
   let _timeout: ReturnType<typeof setTimeout>;
   const _listeners: Action<T>[] = [];
   const _state: Machine<T> = {
-    current: initial,
+    current: config.init,
     send,
-    context: freeze(context || ({} as T)),
+    context: freeze(config.context || ({} as T)),
     listen: (l: Action<T>) => {
       _listeners.push(l);
       return () => _listeners.splice(_listeners.indexOf(l) >>> 0, 1);
@@ -35,7 +31,7 @@ export function machine<T extends O>(
 
   // find and transform transition based on config
   function find(eventName: string): Transition<T> {
-    const transition = config[_state.current][eventName];
+    const transition = config.states[_state.current][eventName];
     if (typeof transition === 'string') return { target: transition };
     return (transition ?? { target: '' }) as Transition<T>;
   }
@@ -67,11 +63,11 @@ export function machine<T extends O>(
     const { target, guard, actions } = find(event.type);
 
     // invalid end result or guard holds result
-    if (!config[target]) return false;
+    if (!config.states[target]) return false;
     if (guard && !guard(_state.context)) return false;
 
     // Invoke exit effects
-    execute(config[_state.current]._exit, event.payload);
+    execute(config.states[_state.current]._exit, event.payload);
     // Invoke transition effects
     execute(actions, event.payload);
 
@@ -79,7 +75,7 @@ export function machine<T extends O>(
     _state.current = target;
 
     // Invoke entry effects
-    execute(config[_state.current]._entry, event.payload);
+    execute(config.states[_state.current]._entry, event.payload);
     _listeners.forEach((listener) =>
       listener(_state.current, _state.context, event.payload)
     );
@@ -87,7 +83,7 @@ export function machine<T extends O>(
   }
 
   // Invoke entry if existing on the initial state
-  execute(config[initial]._entry);
+  execute(config.states[config.init]._entry);
   return new Proxy(_state, { set: () => true });
 }
 

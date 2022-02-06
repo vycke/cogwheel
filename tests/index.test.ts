@@ -35,14 +35,14 @@ beforeEach(() => {
 });
 
 test('Send - existing event', () => {
-  const service = machine('green', configDefault);
+  const service = machine({ init: 'green', states: configDefault });
   expect(service.current).toBe('green');
   service.send({ type: 'CHANGE' });
   expect(service.current).toBe('yellow');
 });
 
 test('Send - non-existing event', () => {
-  const service = machine('green', configDefault);
+  const service = machine({ init: 'green', states: configDefault });
   expect(service.current).toBe('green');
   service.send({ type: 'NON_EXISTING_EVENT' });
   expect(service.current).toBe('green');
@@ -55,7 +55,7 @@ test('Send - non-existing target', () => {
     red: {},
   };
 
-  const service = machine('green', config);
+  const service = machine({ init: 'green', states: config });
   expect(service.current).toBe('green');
   service.send({ type: 'CHANGE' });
   expect(service.current).toBe('green');
@@ -63,7 +63,7 @@ test('Send - non-existing target', () => {
 
 test('Send - state without transition definition', () => {
   const config = { red: {} };
-  const service = machine('red', config);
+  const service = machine({ init: 'red', states: config });
   service.send({ type: 'CHANGE' });
   expect(service.current).toBe('red');
 });
@@ -74,29 +74,29 @@ test('Send - transition object', () => {
     yellow: {},
   };
 
-  const service = machine('green', config);
+  const service = machine({ init: 'green', states: config });
   service.send({ type: 'CHANGE' });
   expect(service.current).toBe('yellow');
 });
 
 test('immutability', () => {
-  const service = machine('green', configDefault);
+  const service = machine({ init: 'green', states: configDefault });
   expect(service.current).toBe('green');
   service.current = 'yellow';
   expect(service.current).toBe('green');
 });
 
 test('listener', () => {
-  const service = machine('green', configDefault);
+  const service = machine({ init: 'green', states: configDefault });
   service.listen(cb);
   service.send({ type: 'CHANGE' });
   expect(cb.mock.calls.length).toBe(1);
 });
 
 test('Incorrect initial state', () => {
-  expect(() => machine('wrongInitialState', configDefault)).toThrow(
-    'Initial state does not exist'
-  );
+  expect(() =>
+    machine({ init: 'WrongInitialState', states: configDefault })
+  ).toThrow('Initial state does not exist');
 });
 
 test('General purpose action', () => {
@@ -108,7 +108,7 @@ test('General purpose action', () => {
     end: {},
   };
 
-  machine<{}>('start', configStart);
+  machine<{}>({ init: 'start', states: configStart });
   expect(cb.mock.calls.length).toBe(1);
 });
 
@@ -125,7 +125,7 @@ test('Entry actions - auto-transition', async () => {
     },
   };
 
-  const service = machine<{}>('green', configAutomatic);
+  const service = machine<{}>({ init: 'green', states: configAutomatic });
   expect(service.current).toBe('green');
   service.send({ type: 'CHANGE' });
   expect(service.current).toBe('red');
@@ -142,7 +142,7 @@ test('Entry actions - auto-transition on initial state', () => {
     end: {},
   };
 
-  const service = machine<{}>('start', configStart);
+  const service = machine<{}>({ init: 'start', states: configStart });
   expect(service.current).toBe('end');
 });
 
@@ -156,7 +156,11 @@ test('Entry actions - update context', () => {
     },
   };
 
-  const service = machine<Context>('start', configStart, { count: 0 });
+  const service = machine<Context>({
+    init: 'start',
+    states: configStart,
+    context: { count: 0 },
+  });
   expect(service.context.count).toBe(0);
   service.send({ type: 'CHANGE' });
   expect(service.current).toBe('end');
@@ -173,7 +177,11 @@ test('Entry actions - update context based on transition input', () => {
     },
   };
 
-  const service = machine<Context>('start', configStart, { count: 0 });
+  const service = machine<Context>({
+    init: 'start',
+    states: configStart,
+    context: { count: 0 },
+  });
   expect(service.context.count).toBe(0);
   service.send({ type: 'CHANGE', payload: { count: 2 } });
   expect(service.current).toBe('end');
@@ -192,7 +200,11 @@ test('Entry actions - multiple actions', () => {
     end: {},
   };
 
-  const service = machine<Context>('start', configStart, { count: 0 });
+  const service = machine<Context>({
+    init: 'start',
+    states: configStart,
+    context: { count: 0 },
+  });
   expect(service.context.count).toBe(0);
   service.send({ type: 'CHANGE' });
   expect(service.context.count).toBe(1);
@@ -210,7 +222,11 @@ test('Exit actions - update context', () => {
     end: {},
   };
 
-  const service = machine<Context>('start', configStart, { count: 0 });
+  const service = machine<Context>({
+    init: 'start',
+    states: configStart,
+    context: { count: 0 },
+  });
   expect(service.context.count).toBe(0);
   service.send({ type: 'CHANGE' });
   expect(service.current).toBe('end');
@@ -230,7 +246,11 @@ test('Transition actions - update context', () => {
     end: {},
   };
 
-  const service = machine<Context>('start', configStart, { count: 0 });
+  const service = machine<Context>({
+    init: 'start',
+    states: configStart,
+    context: { count: 0 },
+  });
   expect(service.context.count).toBe(0);
   service.send({ type: 'CHANGE' });
   expect(service.current).toBe('end');
@@ -250,7 +270,11 @@ test('Guard - allowed', () => {
     yellow: {},
   };
 
-  const service = machine<Context>('green', config, { allowed: true });
+  const service = machine<Context>({
+    init: 'green',
+    states: config,
+    context: { allowed: true },
+  });
   expect(service.current).toBe('green');
   service.send({ type: 'CHANGE' });
   expect(service.current).toBe('yellow');
@@ -269,7 +293,11 @@ test('Guard - not allowed', () => {
     yellow: {},
   };
 
-  const service = machine<Context>('green', config, { allowed: false });
+  const service = machine<Context>({
+    init: 'green',
+    states: config,
+    context: { allowed: false },
+  });
   expect(service.current).toBe('green');
   service.send({ type: 'CHANGE' });
   expect(service.current).toBe('green');

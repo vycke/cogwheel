@@ -22,7 +22,7 @@ const config: Record<string, State<Context>> = {
 };
 
 test('Toast - open toast', () => {
-  const service = machine<Context>('invisible', config);
+  const service = machine<Context>({ init: 'invisible', states: config });
   expect(service.current).toBe('invisible');
   service.send({ type: 'OPENED', payload: { label: 'message' } });
   expect(service.current).toBe('visible');
@@ -30,7 +30,7 @@ test('Toast - open toast', () => {
 });
 
 test('Toast - auto close-toast', async () => {
-  const service = machine('invisible', config);
+  const service = machine({ init: 'invisible', states: config });
   expect(service.current).toBe('invisible');
   service.send({ type: 'OPENED', payload: { label: 'message ' } });
   expect(service.current).toBe('visible');
@@ -39,7 +39,7 @@ test('Toast - auto close-toast', async () => {
 });
 
 test('Toast - manual close-toast', () => {
-  const service = machine('invisible', config);
+  const service = machine({ init: 'invisible', states: config });
   expect(service.current).toBe('invisible');
   service.send({ type: 'OPENED', payload: { label: 'message ' } });
   expect(service.current).toBe('visible');

@@ -38,7 +38,11 @@ let service: Machine<Context>;
 const init: Context = { errors: null, data: null, valid: false };
 
 beforeEach(() => {
-  service = machine<Context>('idle', config, init);
+  service = machine<Context>({
+    init: 'idle',
+    states: config,
+    context: init,
+  });
 });
 
 test('fetch - success', () => {

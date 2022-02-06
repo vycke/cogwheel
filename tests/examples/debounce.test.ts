@@ -12,7 +12,7 @@ const config = {
 };
 
 test('Debounce', async (): Promise<void> => {
-  const service = machine('init', config);
+  const service = machine({ init: 'init', states: config });
   expect(service.current).toBe('init');
   service.send({ type: 'CHANGED' });
   expect(service.current).toBe('debouncing');

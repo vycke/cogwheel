@@ -10,30 +10,33 @@ const action = (state, context, payload) => { ... }
 
 ```js
 const config = {
-  green: {
-    CHANGE: {
-      target: 'red',
-      actions: [
+  init: 'green',
+  states: {
+    green: {
+      CHANGE: {
+        target: 'red',
+        actions: [
+          (state, ctx, payload) => {
+            console.log(state, ctx);
+          },
+        ],
+      },
+    },
+    red: {
+      _entry: [
         (state, ctx, payload) => {
-          console.log(state, ctx);
+          console.log(state, ctx, payload);
+        },
+      ],
+      _exit: [
+        (state, ctx, payload) => {
+          console.log(state, ctx, payload);
+        },
+        (state) => {
+          console.log(state);
         },
       ],
     },
-  },
-  red: {
-    _entry: [
-      (state, ctx, payload) => {
-        console.log(state, ctx, payload);
-      },
-    ],
-    _exit: [
-      (state, ctx, payload) => {
-        console.log(state, ctx, payload);
-      },
-      (state) => {
-        console.log(state);
-      },
-    ],
   },
 };
 ```
@@ -49,10 +52,13 @@ The `send(event)` action creator allows you to automatically fire a new (delayed
 ```js
 import { send } from 'cogwheel';
 const config = {
-  green: { CHANGE: 'red' },
-  red: {
-    CHANGE: 'green',
-    _entry: [() => send('CHANGE', {}, 3000)],
+  init: 'green',
+  states: {
+    green: { CHANGE: 'red' },
+    red: {
+      CHANGE: 'green',
+      _entry: [() => send('CHANGE', {}, 3000)],
+    },
   },
 };
 ```
@@ -65,16 +71,19 @@ The `assign(newContext)` action creator allows you to update the context of the 
 import { assign } from 'cogwheel';
 
 const config = {
-  green: { CHANGE: 'yellow' },
-  yellow: {
-    CHANGE: 'red',
-    _entry: [(_s, ctx) => assign({ count: ctx.count + 1 })],
-  },
-  yellow: {
-    CHANGE: 'green',
-    _entry: [
-      (_s, ctx, payload) => assign({ count: ctx.count + payload.count }),
-    ],
+  init: 'green',
+  states: {
+    green: { CHANGE: 'yellow' },
+    yellow: {
+      CHANGE: 'red',
+      _entry: [(_s, ctx) => assign({ count: ctx.count + 1 })],
+    },
+    yellow: {
+      CHANGE: 'green',
+      _entry: [
+        (_s, ctx, payload) => assign({ count: ctx.count + payload.count }),
+      ],
+    },
   },
 };
 

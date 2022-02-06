@@ -28,11 +28,18 @@ const invalidEntry = (_s, ctx, payload) =>
 
 // CONFIG
 const config = {
-  idle: { STARTED: 'pending' },
-  pending: { FINISHED: 'success', FAILED: 'error', _entry: [pendingEntry] },
-  success: { STARTED: 'pending', MODIFIED: 'invalid', _entry: [successEntry] },
-  invalid: { MODIFIED: 'invalid', _entry: [invalidEntry] },
-  error: { STARTED: 'pending', _entry: [errorEntry] },
+  init: 'idle',
+  states: {
+    idle: { STARTED: 'pending' },
+    pending: { FINISHED: 'success', FAILED: 'error', _entry: [pendingEntry] },
+    success: {
+      STARTED: 'pending',
+      MODIFIED: 'invalid',
+      _entry: [successEntry],
+    },
+    invalid: { MODIFIED: 'invalid', _entry: [invalidEntry] },
+    error: { STARTED: 'pending', _entry: [errorEntry] },
+  },
 };
 
 // EXAMPLE USAGE
@@ -55,10 +62,13 @@ const toggling = (_s, ctx) => send({ type: 'TOGGLE', payload: ctx, delay: 10 });
 
 // CONFIG
 const config = {
-  visible: { TOGGLE: 'closing' },
-  closing: { TOGGLE: 'invisible', _entry: [toggling] },
-  invisible: { TOGGLE: 'opening' },
-  opening: { TOGGLE: 'visible', _entry: [toggling] },
+  init: 'invisible',
+  states: {
+    visible: { TOGGLE: 'closing' },
+    closing: { TOGGLE: 'invisible', _entry: [toggling] },
+    invisible: { TOGGLE: 'opening' },
+    opening: { TOGGLE: 'visible', _entry: [toggling] },
+  },
 };
 ```
 
@@ -73,15 +83,18 @@ import { assign, send } from 'cogwheel';
 
 // CONFIG
 const config = {
-  visible: {
-    CLOSED: 'invisible',
-    OPENED: 'visible',
-    _entry: [
-      (_s, ctx, payload) => assign({ ...ctx, ...payload }),
-      (_s, ctx) => send({ type: 'CLOSED', payload: ctx, delay: 6000 }),
-    ],
+  init: 'invisible',
+  states: {
+    visible: {
+      CLOSED: 'invisible',
+      OPENED: 'visible',
+      _entry: [
+        (_s, ctx, payload) => assign({ ...ctx, ...payload }),
+        (_s, ctx) => send({ type: 'CLOSED', payload: ctx, delay: 6000 }),
+      ],
+    },
+    invisible: { OPENED: 'visible' },
   },
-  invisible: { OPENED: 'visible' },
 };
 
 // EXAMPLE USAGE
@@ -121,26 +134,29 @@ function validationAction(_s, ctx) {
 
 // CONFIG
 const config = {
-  init: { LOADED: 'ready' },
-  ready: {
-    CHANGED: 'touched',
-    _entry: [(_s, _ctx, pl) => assign({ values: pl, errors: null })],
+  init: 'init',
+  states: {
+    init: { LOADED: 'ready' },
+    ready: {
+      CHANGED: 'touched',
+      _entry: [(_s, _ctx, pl) => assign({ values: pl, errors: null })],
+    },
+    touched: {
+      CHANGED: 'touched',
+      SUBMITTED: 'validating',
+      _entry: [updateEntry],
+    },
+    validating: {
+      SUBMITTED: { target: 'submitting', guard: isValid },
+      REJECTED: { target: 'invalid', guard: (ctx) => !isValid(ctx) },
+      _entry: [validationAction],
+    },
+    invalid: {
+      CHANGED: 'touched',
+      _entry: [(_s, ctx, values) => assign({ ...ctx, errors: values })],
+    },
+    submitting: { FINISHED: 'ready' },
   },
-  touched: {
-    CHANGED: 'touched',
-    SUBMITTED: 'validating',
-    _entry: [updateEntry],
-  },
-  validating: {
-    SUBMITTED: { target: 'submitting', guard: isValid },
-    REJECTED: { target: 'invalid', guard: (ctx) => !isValid(ctx) },
-    _entry: [validationAction],
-  },
-  invalid: {
-    CHANGED: 'touched',
-    _entry: [(_s, ctx, values) => assign({ ...ctx, errors: values })],
-  },
-  submitting: { FINISHED: 'ready' },
 };
 
 //EXAMPLE USAGE
@@ -155,11 +171,14 @@ By storing the actual state of an object, you can use the state of the object to
 
 ```js
 const config = {
-  draft: { SUBMIT: 'pending' },
-  pending: { APPROVE: 'approved', REJECT: 'rejected' },
-  approved: { REJECT: 'rejected', PROCESS: 'processed' },
-  rejected: { SUBMIT: 'pending' },
-  processed: {},
+  init: 'draft',
+  states: {
+    draft: { SUBMIT: 'pending' },
+    pending: { APPROVE: 'approved', REJECT: 'rejected' },
+    approved: { REJECT: 'rejected', PROCESS: 'processed' },
+    rejected: { SUBMIT: 'pending' },
+    processed: {},
+  },
 };
 
 function approve() {
@@ -177,15 +196,19 @@ Authentication, especially token-based authentication has several steps and path
 import { send } from 'cogwheel';
 
 const config = {
-  not_authenticated: { SIGNIN_STARTED: 'signing_in' },
-  signing_in: { FINISHED: 'authenticated', FAILED: 'not_authenticated' },
-  authenticated: {
-    SIGNOUT_STARTED: 'signing_out',
-    EXPIRED: 'expired',
-    _entry: (_s, ctx) => send({ type: 'EXPIRED', payload: ctx, delay: 90000 }),
+  init: 'not_authenticated',
+  states: {
+    not_authenticated: { SIGNIN_STARTED: 'signing_in' },
+    signing_in: { FINISHED: 'authenticated', FAILED: 'not_authenticated' },
+    authenticated: {
+      SIGNOUT_STARTED: 'signing_out',
+      EXPIRED: 'expired',
+      _entry: (_s, ctx) =>
+        send({ type: 'EXPIRED', payload: ctx, delay: 90000 }),
+    },
+    expired: { REFRESH_STARTED: 'refreshing' },
+    signing_out: { FINISHED: 'not_authenticated' },
+    refreshing: { FINISHED: 'authenticated', FAILED: 'signing_out' },
   },
-  expired: { REFRESH_STARTED: 'refreshing' },
-  signing_out: { FINISHED: 'not_authenticated' },
-  refreshing: { FINISHED: 'authenticated', FAILED: 'signing_out' },
 };
 ```

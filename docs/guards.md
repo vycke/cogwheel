@@ -4,13 +4,16 @@ Transitions can also be guarded. This allows you to add a condition that needs t
 
 ```js
 const config = {
-  start: {
-    CHANGE: {
-      target: 'end',
-      guard: (ctx) => ctx?.allowed,
+  init: 'start',
+  states: {
+    start: {
+      CHANGE: {
+        target: 'end',
+        guard: (ctx) => ctx?.allowed,
+      },
     },
+    end: {},
   },
-  end: {},
 };
 ```
 

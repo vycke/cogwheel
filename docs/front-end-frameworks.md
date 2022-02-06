@@ -9,9 +9,9 @@ import { machine } from 'cogwheel';
 import { useLayoutEffect, useReducer, useRef } from 'react';
 
 // Define the hook, with query for computed parameters
-export default function useMachine(initial, config, context) {
+export default function useMachine(config) {
   const [, rerender] = useReducer((c) => c + 1, 0);
-  const value = useRef(machine(initial, config, context));
+  const value = useRef(machine(config));
 
   useLayoutEffect(() => {
     const remove = value.current.listen(rerender);
@@ -28,8 +28,8 @@ export default function useMachine(initial, config, context) {
 import { machine } from 'cogwheel';
 import { writable } from 'svelte/store';
 
-export function machineStore(initial, states) {
-  const machine = machine(initial, states);
+export function machineStore(config) {
+  const machine = machine(config);
   const { subscribe, update } = writable({
     state: machine.current,
     context: machine.context,

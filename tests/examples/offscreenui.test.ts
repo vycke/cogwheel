@@ -19,7 +19,7 @@ const config = {
 };
 
 test('Offscreen UI - open', async () => {
-  const service = machine('invisible', config);
+  const service = machine({ init: 'invisible', states: config });
   expect(service.current).toBe('invisible');
   service.send({ type: 'TOGGLE' });
   expect(service.current).toBe('opening');
@@ -28,7 +28,7 @@ test('Offscreen UI - open', async () => {
 });
 
 test('Offscreen UI - close', async () => {
-  const service = machine('visible', config);
+  const service = machine({ init: 'visible', states: config });
   expect(service.current).toBe('visible');
   service.send({ type: 'TOGGLE' });
   expect(service.current).toBe('closing');
