@@ -50,7 +50,7 @@ export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
     // Run over all actions
     for (const action of actions) {
       const aObj = action(_state.current, copy<T>(_state.context), payload);
-      if (!aObj) return;
+      if (!aObj) continue;
 
       if (aObj.type === ActionTypes.assign)
         _state.context = freeze<T>(aObj.payload as T);

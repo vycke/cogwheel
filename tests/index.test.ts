@@ -112,6 +112,19 @@ test('General purpose action', () => {
   expect(cb.mock.calls.length).toBe(1);
 });
 
+test('General purpose action (double)', () => {
+  const configStart = {
+    start: {
+      CHANGE: 'end',
+      _entry: [logAction, logAction],
+    },
+    end: {},
+  };
+
+  machine<{}>({ init: 'start', states: configStart });
+  expect(cb.mock.calls.length).toBe(2);
+});
+
 test('Entry actions - auto-transition', async () => {
   const configAutomatic = {
     green: { CHANGE: 'yellow' },
