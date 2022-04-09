@@ -315,3 +315,30 @@ test('Guard - not allowed', () => {
   service.send({ type: 'CHANGE' });
   expect(service.current).toBe('green');
 });
+
+test('Actions - break after send', () => {
+  type Context = { count: number };
+
+  const configStart = {
+    start: { CHANGE: 'end' },
+    end: {
+      CHANGE: 'start',
+      _entry: [
+        countAssign,
+        countAssign,
+        () => send({ type: 'CHANGE' }),
+        countAssign,
+      ],
+    },
+  };
+
+  const service = machine<Context>({
+    init: 'start',
+    states: configStart,
+    context: { count: 0 },
+  });
+  expect(service.context.count).toBe(0);
+  service.send({ type: 'CHANGE' });
+  expect(service.current).toBe('start');
+  expect(service.context.count).toBe(2);
+});

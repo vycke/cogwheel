@@ -12,7 +12,7 @@ export type Action<T extends O> = (
   state: string,
   context: T,
   payload?: unknown
-) => void | ActionObject;
+) => void | ActionObject | Promise<void | ActionObject>;
 
 export type ActionObject = {
   type: ActionTypes;

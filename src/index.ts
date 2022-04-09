@@ -8,6 +8,7 @@ import {
   Event,
   Machine,
   MachineConfig,
+  ActionObject,
 } from './types';
 import { copy, freeze } from './utils';
 import { parallel } from './parallel';
@@ -45,16 +46,32 @@ export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
   }
 
   // function to execute actions within a machine
-  function execute(actions?: Action<T>[], payload?: unknown): void {
+  async function execute(
+    actions?: Action<T>[],
+    payload?: unknown
+  ): Promise<void> {
     if (!actions) return;
     // Run over all actions
     for (const action of actions) {
-      const aObj = action(_state.current, copy<T>(_state.context), payload);
+      const _res = action(_state.current, copy<T>(_state.context), payload);
+
+      if (!_res) continue;
+      let aObj: ActionObject;
+
+      // Check if the action is a promise or not.
+      if (typeof (_res as Promise<void | ActionObject>).then === 'function')
+        aObj = (await _res) as ActionObject;
+      else aObj = _res as ActionObject;
+
       if (!aObj) continue;
 
       if (aObj.type === ActionTypes.assign)
         _state.context = freeze<T>(aObj.payload as T);
-      if (aObj.type === ActionTypes.send) send(aObj.payload as Event);
+      if (aObj.type === ActionTypes.send) {
+        send(aObj.payload as Event);
+        // No other actions are executed after a send
+        break;
+      }
     }
   }
 

@@ -63,6 +63,8 @@ const config = {
 };
 ```
 
+**NOTE**: after a send action, no further actions are executed anymore, as a new transition is invoked.
+
 ## `assign` action creator
 
 The `assign(newContext)` action creator allows you to update the context of the machine.
@@ -89,6 +91,22 @@ const config = {
 
 // { count: 2 } corresponds with the 'values' in the entry action of the red state
 machine.send({ type: 'CHANGE', payload: { count: 2 } });
+```
+
+## Async actions
+
+Actions can be async as well.
+
+```js
+import { send } from 'cogwheel';
+async function action() {
+  try {
+    const res = await fetch();
+    return send({ type: 'SUCCESS', payload: res });
+  } catch (e) {
+    return send({ type: 'ERROR' });
+  }
+}
 ```
 
 ## Listeners
