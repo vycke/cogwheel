@@ -6,7 +6,7 @@ const config = {
   debouncing: {
     GO: 'executing',
     CHANGED: 'debouncing',
-    _entry: [(_s: string) => send({ type: 'GO', delay: 10 })],
+    _entry: [() => send({ type: 'GO', delay: 10 })],
   },
   executing: { FINISHED: 'init' },
 };

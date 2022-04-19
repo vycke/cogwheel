@@ -46,24 +46,14 @@ export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
   }
 
   // function to execute actions within a machine
-  async function execute(
-    actions?: Action<T>[],
-    payload?: unknown
-  ): Promise<void> {
+  function execute(actions?: Action<T>[], payload?: unknown): void {
     if (!actions) return;
     // Run over all actions
     for (const action of actions) {
       const _res = action(_state.current, copy<T>(_state.context), payload);
 
       if (!_res) continue;
-      let aObj: ActionObject;
-
-      // Check if the action is a promise or not.
-      if (typeof (_res as Promise<void | ActionObject>).then === 'function')
-        aObj = (await _res) as ActionObject;
-      else aObj = _res as ActionObject;
-
-      if (!aObj) continue;
+      const aObj = _res as ActionObject;
 
       if (aObj.type === ActionTypes.assign)
         _state.context = freeze<T>(aObj.payload as T);

@@ -93,22 +93,6 @@ const config = {
 machine.send({ type: 'CHANGE', payload: { count: 2 } });
 ```
 
-## Async actions
-
-Actions can be async as well.
-
-```js
-import { send } from 'cogwheel';
-async function action() {
-  try {
-    const res = await fetch();
-    return send({ type: 'SUCCESS', payload: res });
-  } catch (e) {
-    return send({ type: 'ERROR' });
-  }
-}
-```
-
 ## Listeners
 
 Listeners are special actions that trigger on each successful transition of the machine. You can have multiple listeners on the machine.
