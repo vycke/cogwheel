@@ -20,3 +20,8 @@ export function copy<T extends O>(obj: T): T {
   });
   return _obj;
 }
+
+// function to create random id
+export function uuid(): string {
+  return 'xxxxx'.replace(/[x]/g, () => ((Math.random() * 16) | 0).toString(16));
+}

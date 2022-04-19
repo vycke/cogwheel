@@ -9,8 +9,7 @@ export type O = {
 };
 
 export type Action<T extends O> = (
-  state: string,
-  context: T,
+  partial: IMachine<T>,
   payload?: unknown
 ) => void | ActionObject;
 
@@ -44,10 +43,14 @@ export type MachineConfig<T extends O> = {
   context?: T;
 };
 
-export type Machine<T extends O> = {
+export type IMachine<T extends O> = {
   current: string;
-  send(event: Event): void;
+  id: string;
   context: T;
+};
+
+export type Machine<T extends O> = IMachine<T> & {
+  send(event: Event): void;
   listen(listener?: Action<T>): void;
 };
 

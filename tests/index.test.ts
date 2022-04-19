@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { machine, send, assign } from '../src';
-import { Action } from '../src/types';
+import { Action, IMachine } from '../src/types';
 import { delay } from './helpers';
 
 // Types
@@ -16,13 +16,12 @@ const configDefault = {
 };
 
 const countAssign: Action<Context> = function (
-  _s: string,
-  ctx: Context,
+  p: IMachine<Context>,
   values?: unknown
 ) {
   if ((values as Context)?.count)
-    return assign({ count: ctx.count + (values as Context).count });
-  return assign({ count: ctx.count + 1 });
+    return assign({ count: p.context.count + (values as Context).count });
+  return assign({ count: p.context.count + 1 });
 };
 
 const logAction: Action<{}> = function (state): void {
