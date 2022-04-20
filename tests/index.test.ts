@@ -87,7 +87,10 @@ test('immutability', () => {
 
 test('listener', () => {
   const service = machine({ init: 'green', states: configDefault });
-  service.listen(cb);
+  const remove = service.listen(cb);
+  service.send({ type: 'CHANGE' });
+  expect(cb.mock.calls.length).toBe(1);
+  remove();
   service.send({ type: 'CHANGE' });
   expect(cb.mock.calls.length).toBe(1);
 });

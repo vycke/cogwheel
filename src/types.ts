@@ -51,7 +51,7 @@ export type IMachine<T extends O> = {
 
 export type Machine<T extends O> = IMachine<T> & {
   send(event: Event): void;
-  listen(listener?: Action<T>): void;
+  listen(listener?: Action<T>): () => void;
 };
 
 // never is used as the type for the Machine is not important in this stage

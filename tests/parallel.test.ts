@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { machine } from '../src';
-import { parallel } from '../src/parallel';
+import { parallel } from '../src';
 
 // Default configuration
 const configDefault = {
