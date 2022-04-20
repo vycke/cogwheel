@@ -1,25 +1,25 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { machine, assign } from '../../src';
-import { Action, Machine, State } from '../../src/types';
+import { Action, MachineState, Machine, State } from '../../src/types';
 
 type Context = { data: object | null; errors: object | null; valid: boolean };
 type Modifier = { key: string; value: unknown };
 
-const successEntry: Action<Context> = (_s, ctx: Context, payload) =>
-  assign({ ...ctx, data: payload, errors: null, valid: true });
+const successEntry: Action<Context> = (p: MachineState<Context>, payload) =>
+  assign({ ...p.context, data: payload, errors: null, valid: true });
 
-const errorEntry: Action<Context> = (_s, ctx: Context, payload) =>
-  assign({ ...ctx, errors: payload, data: null, valid: false });
+const errorEntry: Action<Context> = (p: MachineState<Context>, payload) =>
+  assign({ ...p.context, errors: payload, data: null, valid: false });
 
-const pendingEntry: Action<Context> = (_s, ctx: Context) =>
-  assign({ ...ctx, errors: null });
+const pendingEntry: Action<Context> = (p: MachineState<Context>) =>
+  assign({ ...p.context, errors: null });
 
-const invalidEntry: Action<Context> = (_s, ctx: Context, payload) => {
+const invalidEntry: Action<Context> = (p: MachineState<Context>, payload) => {
   const _pl = payload as Modifier;
   return assign({
-    ...ctx,
+    ...p.context,
     data: {
-      ...ctx.data,
+      ...p.context.data,
       [_pl.key]: _pl.value,
     },
     valid: false,

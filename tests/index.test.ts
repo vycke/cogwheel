@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { machine, send, assign } from '../src';
-import { Action } from '../src/types';
+import { Action, MachineState } from '../src/types';
 import { delay } from './helpers';
 
 // Types
@@ -16,13 +16,12 @@ const configDefault = {
 };
 
 const countAssign: Action<Context> = function (
-  _s: string,
-  ctx: Context,
+  p: MachineState<Context>,
   values?: unknown
 ) {
   if ((values as Context)?.count)
-    return assign({ count: ctx.count + (values as Context).count });
-  return assign({ count: ctx.count + 1 });
+    return assign({ count: p.context.count + (values as Context).count });
+  return assign({ count: p.context.count + 1 });
 };
 
 const logAction: Action<{}> = function (state): void {
@@ -88,7 +87,10 @@ test('immutability', () => {
 
 test('listener', () => {
   const service = machine({ init: 'green', states: configDefault });
-  service.listen(cb);
+  const remove = service.listen(cb);
+  service.send({ type: 'CHANGE' });
+  expect(cb.mock.calls.length).toBe(1);
+  remove();
   service.send({ type: 'CHANGE' });
   expect(cb.mock.calls.length).toBe(1);
 });
@@ -277,7 +279,7 @@ test('Guard - allowed', () => {
     green: {
       CHANGE: {
         target: 'yellow',
-        guard: (c: Context) => c.allowed,
+        guard: (s: MachineState<Context>) => s.context.allowed,
       },
     },
     yellow: {},
@@ -300,7 +302,7 @@ test('Guard - not allowed', () => {
     green: {
       CHANGE: {
         target: 'yellow',
-        guard: (c: Context) => c.allowed,
+        guard: (s: MachineState<Context>) => s.context.allowed,
       },
     },
     yellow: {},

@@ -10,6 +10,15 @@
 
 Simple finite state machines that can be used for state/process management.
 
+## Principles
+
+Cogwheel is build around the following principles around state machines, and the library should be used as such:
+
+- State transitions are synchronous & fire & forget by design;
+- State transisions should not have side-effects, except for debugging purposes (e.g. console-log;
+- The context should be serializable;
+- All state & context mutations should be owned by the machine and its actions. This means as much (business) logic as possible should be included in the machine and its actions.
+
 ## [Getting started](./docs/getting-started.md)
 
 ## [Guards](./docs/guards.md)

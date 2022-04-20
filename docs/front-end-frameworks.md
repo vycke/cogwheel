@@ -35,8 +35,8 @@ export function machineStore(config) {
     context: machine.context,
   });
 
-  machine.listen((state, context) => {
-    update(() => ({ state, context }));
+  machine.listen(({ current, context }) => {
+    update(() => ({ state: current, context }));
   });
 
   return { subscribe, send: machine.send };

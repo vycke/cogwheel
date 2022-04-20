@@ -9,18 +9,19 @@ import {
   Machine,
   MachineConfig,
   ActionObject,
+  MachineState,
 } from './types';
-import { copy, freeze } from './utils';
+import { copy, freeze, uuid } from './utils';
 import { parallel } from './parallel';
 
 // wrap a machine in a service
 export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
   // Throw error if initial state does not exist
   if (!config.states[config.init]) throw Error('Initial state does not exist');
-
   let _timeout: ReturnType<typeof setTimeout>;
   const _listeners: Action<T>[] = [];
   const _state: Machine<T> = {
+    id: uuid(),
     current: config.init,
     send,
     context: freeze(config.context || ({} as T)),
@@ -30,11 +31,10 @@ export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
     },
   };
 
-  // find and transform transition based on config
-  function find(eventName: string): Transition<T> {
-    const transition = config.states[_state.current][eventName];
-    if (typeof transition === 'string') return { target: transition };
-    return (transition ?? { target: '' }) as Transition<T>;
+  // Get partial information of the machine
+  function partial(): MachineState<T> {
+    const { id, context, current } = _state;
+    return { id, current, context: copy<T>(context) };
   }
 
   // Execution of a send action
@@ -46,24 +46,14 @@ export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
   }
 
   // function to execute actions within a machine
-  async function execute(
-    actions?: Action<T>[],
-    payload?: unknown
-  ): Promise<void> {
+  function execute(actions?: Action<T>[], payload?: unknown): void {
     if (!actions) return;
     // Run over all actions
     for (const action of actions) {
-      const _res = action(_state.current, copy<T>(_state.context), payload);
+      const _res = action(partial(), payload);
 
       if (!_res) continue;
-      let aObj: ActionObject;
-
-      // Check if the action is a promise or not.
-      if (typeof (_res as Promise<void | ActionObject>).then === 'function')
-        aObj = (await _res) as ActionObject;
-      else aObj = _res as ActionObject;
-
-      if (!aObj) continue;
+      const aObj = _res as ActionObject;
 
       if (aObj.type === ActionTypes.assign)
         _state.context = freeze<T>(aObj.payload as T);
@@ -77,11 +67,15 @@ export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
 
   // function to execute the state machine
   function transition(event: Event): boolean {
-    const { target, guard, actions } = find(event.type);
+    let target, guard, actions;
+    const transition = config.states[_state.current][event.type];
+    if (!transition) return false;
+    if (typeof transition === 'string') target = transition;
+    else ({ target, guard, actions } = transition as Transition<T>);
 
     // invalid end result or guard holds result
     if (!config.states[target]) return false;
-    if (guard && !guard(_state.context)) return false;
+    if (guard && !guard(partial())) return false;
 
     // Invoke exit effects
     execute(config.states[_state.current]._exit, event.payload);
@@ -93,9 +87,7 @@ export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
 
     // Invoke entry effects
     execute(config.states[_state.current]._entry, event.payload);
-    _listeners.forEach((listener) =>
-      listener(_state.current, _state.context, event.payload)
-    );
+    _listeners.forEach((listener) => listener(partial(), event.payload));
     return true;
   }
 
