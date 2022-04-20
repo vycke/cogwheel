@@ -3,7 +3,10 @@
 You are able to define 'actions'. These actions are executed when you leave a state (after guard checks), when you enter a state, or when a transition is executed. Actions can be used to invoke external side-effects (e.g. start a fetch request), or invoke changes within the state machine via an `ActionObject: { type: string, payload?: unknown }`. Each action takes the current state and context as input parameters. In addition, the values coming from `machine.send(...)` or via the `send` action creator (more on that later), comes as a third parameter.
 
 ```js
-const action = (state, context, payload) => { ... }
+import type { MachineState } from 'cogwheel/types';
+// MachineState = { current, id, context };
+type Ctx = {};
+const action = (state: MachineState<Ctx>, payload?: any) => { ... }
 ```
 
 > NOTE: `_entry` and `_exit` are reserved transition names to provide for a simplified API.
@@ -16,21 +19,21 @@ const config = {
       CHANGE: {
         target: 'red',
         actions: [
-          (state, ctx, payload) => {
-            console.log(state, ctx);
+          (state) => {
+            console.log(state);
           },
         ],
       },
     },
     red: {
       _entry: [
-        (state, ctx, payload) => {
-          console.log(state, ctx, payload);
+        (state, payload) => {
+          console.log(state, payload);
         },
       ],
       _exit: [
-        (state, ctx, payload) => {
-          console.log(state, ctx, payload);
+        (state, payload) => {
+          console.log(state, payload);
         },
         (state) => {
           console.log(state);
@@ -78,12 +81,13 @@ const config = {
     green: { CHANGE: 'yellow' },
     yellow: {
       CHANGE: 'red',
-      _entry: [(_s, ctx) => assign({ count: ctx.count + 1 })],
+      _entry: [(state) => assign({ count: state.context.count + 1 })],
     },
     yellow: {
       CHANGE: 'green',
       _entry: [
-        (_s, ctx, payload) => assign({ count: ctx.count + payload.count }),
+        (state, payload) =>
+          assign({ count: state.context.count + payload.count }),
       ],
     },
   },
@@ -98,8 +102,8 @@ machine.send({ type: 'CHANGE', payload: { count: 2 } });
 Listeners are special actions that trigger on each successful transition of the machine. You can have multiple listeners on the machine.
 
 ```js
-function listener(state, context) {
-  console.log(state, contextt);
+function listener(state) {
+  console.log(state);
 }
 
 const remove = machine.listen(listener); // subscribe

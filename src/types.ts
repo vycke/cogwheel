@@ -9,7 +9,7 @@ export type O = {
 };
 
 export type Action<T extends O> = (
-  partial: IMachine<T>,
+  partial: MachineState<T>,
   payload?: unknown
 ) => void | ActionObject;
 
@@ -18,7 +18,7 @@ export type ActionObject = {
   payload: O;
 };
 
-export type Guard<T> = (context: T) => boolean;
+export type Guard<T extends O> = (state: MachineState<T>) => boolean;
 export type Transition<T extends O> = {
   target: string;
   guard?: Guard<T>;
@@ -43,21 +43,22 @@ export type MachineConfig<T extends O> = {
   context?: T;
 };
 
-export type IMachine<T extends O> = {
+// Partial machine
+export type MachineState<T extends O> = {
   current: string;
   id: string;
   context: T;
 };
 
-export type Machine<T extends O> = IMachine<T> & {
+export type Machine<T extends O> = MachineState<T> & {
   send(event: Event): void;
   listen(listener?: Action<T>): () => void;
 };
 
 // never is used as the type for the Machine is not important in this stage
 // and to avoid sending multiple generics
-export type PMachine = { [key: string]: Machine<never> };
+export type OMachine = { [key: string]: Machine<never> };
 
-export type ParallelMachine<T extends PMachine> = T & {
+export type ParallelMachine<T extends OMachine> = T & {
   send(event: Event): void;
 };

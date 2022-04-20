@@ -9,7 +9,7 @@ import {
   Machine,
   MachineConfig,
   ActionObject,
-  IMachine,
+  MachineState,
 } from './types';
 import { copy, freeze, uuid } from './utils';
 import { parallel } from './parallel';
@@ -32,7 +32,7 @@ export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
   };
 
   // Get partial information of the machine
-  function partial(): IMachine<T> {
+  function partial(): MachineState<T> {
     const { id, context, current } = _state;
     return { id, current, context: copy<T>(context) };
   }
@@ -75,7 +75,7 @@ export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
 
     // invalid end result or guard holds result
     if (!config.states[target]) return false;
-    if (guard && !guard(_state.context)) return false;
+    if (guard && !guard(partial())) return false;
 
     // Invoke exit effects
     execute(config.states[_state.current]._exit, event.payload);

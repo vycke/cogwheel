@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { machine, send, assign } from '../src';
-import { Action, IMachine } from '../src/types';
+import { Action, MachineState } from '../src/types';
 import { delay } from './helpers';
 
 // Types
@@ -16,7 +16,7 @@ const configDefault = {
 };
 
 const countAssign: Action<Context> = function (
-  p: IMachine<Context>,
+  p: MachineState<Context>,
   values?: unknown
 ) {
   if ((values as Context)?.count)
@@ -279,7 +279,7 @@ test('Guard - allowed', () => {
     green: {
       CHANGE: {
         target: 'yellow',
-        guard: (c: Context) => c.allowed,
+        guard: (s: MachineState<Context>) => s.context.allowed,
       },
     },
     yellow: {},
@@ -302,7 +302,7 @@ test('Guard - not allowed', () => {
     green: {
       CHANGE: {
         target: 'yellow',
-        guard: (c: Context) => c.allowed,
+        guard: (s: MachineState<Context>) => s.context.allowed,
       },
     },
     yellow: {},

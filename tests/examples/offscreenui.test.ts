@@ -1,7 +1,7 @@
 import { machine, send } from '../../src';
 import { delay } from '../helpers';
 
-function toggling(_s: string) {
+function toggling() {
   return send({ type: 'TOGGLE', delay: 10 });
 }
 

@@ -9,7 +9,7 @@ const config = {
     start: {
       CHANGE: {
         target: 'end',
-        guard: (ctx) => ctx?.allowed,
+        guard: (s: MachineState<{ ... }>) => s.context?.allowed,
       },
     },
     end: {},

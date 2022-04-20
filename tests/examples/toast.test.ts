@@ -1,22 +1,21 @@
 import { assign, machine, send } from '../../src';
-import { ActionObject, O, State } from '../../src/types';
+import { ActionObject, MachineState, O, State } from '../../src/types';
 import { delay } from '../helpers';
 
 type Context = { label: string };
 
 function valueAssign<T extends O>(
-  _s: string,
-  ctx: T,
+  s: MachineState<Context>,
   payload: unknown
 ): ActionObject {
-  return assign({ ...ctx, ...(payload as T) });
+  return assign({ ...s.context, ...(payload as T) });
 }
 
 const config: Record<string, State<Context>> = {
   visible: {
     CLOSED: 'invisible',
     OPENED: 'visible',
-    _entry: [valueAssign, (_s) => send({ type: 'CLOSED', delay: 10 })],
+    _entry: [valueAssign, () => send({ type: 'CLOSED', delay: 10 })],
   },
   invisible: { OPENED: 'visible' },
 };

@@ -1,5 +1,5 @@
 import { machine, send, assign } from '../../src';
-import { IMachine, State } from '../../src/types';
+import { MachineState, State } from '../../src/types';
 
 type O = Record<string, unknown>;
 type Context = {
@@ -12,13 +12,13 @@ function validator(ctx: Context) {
   return { key: 'required' };
 }
 
-function isValid(ctx: Context) {
-  const _res = validator(ctx);
+function isValid(s: MachineState<Context>) {
+  const _res = validator(s.context);
   if (Object.keys(_res).length === 0) return true;
   return false;
 }
 
-function updateEntry(p: IMachine<Context>, pl: unknown) {
+function updateEntry(p: MachineState<Context>, pl: unknown) {
   const _ctx = { ...p.context };
   const _pl = pl as { key: string; value: unknown };
   _ctx.values[_pl.key] = _pl.value;
@@ -41,8 +41,8 @@ const config: Record<string, State<Context>> = {
     SUBMITTED: { target: 'submitting', guard: isValid },
     REJECTED: { target: 'invalid', guard: (ctx) => !isValid(ctx) },
     _entry: [
-      (p: IMachine<Context>) => {
-        if (isValid(p.context)) return send({ type: 'SUBMITTED' });
+      (p: MachineState<Context>) => {
+        if (isValid(p)) return send({ type: 'SUBMITTED' });
         else return send({ type: 'REJECTED', payload: validator(p.context) });
       },
     ],
@@ -50,7 +50,7 @@ const config: Record<string, State<Context>> = {
   invalid: {
     CHANGED: 'touched',
     _entry: [
-      (p: IMachine<Context>, pl) =>
+      (p: MachineState<Context>, pl) =>
         assign({
           ...p.context,
           errors: pl as O,

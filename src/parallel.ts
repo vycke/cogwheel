@@ -1,6 +1,6 @@
-import { Event, ParallelMachine, PMachine } from './types';
+import { Event, ParallelMachine, OMachine } from './types';
 
-export function parallel<T extends PMachine>(config: T): ParallelMachine<T> {
+export function parallel<T extends OMachine>(config: T): ParallelMachine<T> {
   function send(event: Event): void {
     Object.values(config).forEach((machine) => {
       machine.send(event);
