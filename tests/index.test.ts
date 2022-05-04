@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { machine, send, assign } from '../src';
-import { Action, MachineState } from '../src/types';
+import { Action, MachineErrors, MachineState } from '../src/types';
 import { delay } from './helpers';
 
 // Types
@@ -47,19 +47,6 @@ test('Send - non-existing event', () => {
   expect(service.current).toBe('green');
 });
 
-test('Send - non-existing target', () => {
-  const config = {
-    green: { CHANGE: 'blue' },
-    yellow: { CHANGE: 'red' },
-    red: {},
-  };
-
-  const service = machine({ init: 'green', states: config });
-  expect(service.current).toBe('green');
-  service.send({ type: 'CHANGE' });
-  expect(service.current).toBe('green');
-});
-
 test('Send - state without transition definition', () => {
   const config = { red: {} };
   const service = machine({ init: 'red', states: config });
@@ -98,7 +85,19 @@ test('listener', () => {
 test('Incorrect initial state', () => {
   expect(() =>
     machine({ init: 'WrongInitialState', states: configDefault })
-  ).toThrow('Initial state does not exist');
+  ).toThrow(MachineErrors.init);
+});
+
+test('Non-existing target in configuration', () => {
+  const config = {
+    green: { CHANGE: 'blue' },
+    yellow: { CHANGE: 'red' },
+    red: {},
+  };
+
+  expect(() => machine({ init: 'green', states: config })).toThrow(
+    MachineErrors.target
+  );
 });
 
 test('General purpose action', () => {

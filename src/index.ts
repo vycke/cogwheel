@@ -10,14 +10,62 @@ import {
   MachineConfig,
   ActionObject,
   MachineState,
+  MachineErrors,
 } from './types';
-import { copy, freeze, uuid } from './utils';
 import { parallel } from './parallel';
+
+// deep-freeze for immutability
+function freeze<T extends O>(obj: T): T {
+  if (Object.isFrozen(obj)) return obj;
+  Object.freeze(obj);
+  Object.keys(obj).forEach((prop: string) => {
+    if (typeof obj[prop] !== 'object' || Object.isFrozen(obj[prop])) return;
+    freeze(obj[prop] as O);
+  });
+  return obj;
+}
+
+// copy frozen object
+function copy<T extends O>(obj: T): T {
+  const _obj = Object.assign({}, obj);
+  Object.keys(_obj).forEach((prop: string) => {
+    if (typeof obj[prop] === 'object' && obj[prop] !== null)
+      (_obj[prop] as O) = copy(_obj[prop] as O);
+  });
+  return _obj;
+}
+
+// function to create random id
+function uuid(): string {
+  return 'xxxxx'.replace(/[x]/g, () => ((Math.random() * 16) | 0).toString(16));
+}
+
+function validate<T extends O>(
+  config: MachineConfig<T>
+): MachineErrors | undefined {
+  if (!config.states[config.init]) return MachineErrors.init;
+
+  let valid = true;
+  const states = Object.keys(config.states);
+  states.forEach((state) => {
+    Object.entries(config.states[state]).forEach(([key, value]) => {
+      if (['_exit', '_entry'].includes(key)) return;
+
+      const target =
+        typeof value === 'string' ? value : (value as Transition<T>).target;
+
+      if (!states.includes(target)) valid = false;
+    });
+  });
+
+  return valid ? undefined : MachineErrors.target;
+}
 
 // wrap a machine in a service
 export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
-  // Throw error if initial state does not exist
-  if (!config.states[config.init]) throw Error('Initial state does not exist');
+  // Throw error if configuration is invalid
+  const isInvalid = validate(config);
+  if (isInvalid) throw Error(isInvalid);
   let _timeout: ReturnType<typeof setTimeout>;
   const _listeners: Action<T>[] = [];
   const _state: Machine<T> = {
@@ -73,8 +121,7 @@ export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
     if (typeof transition === 'string') target = transition;
     else ({ target, guard, actions } = transition as Transition<T>);
 
-    // invalid end result or guard holds result
-    if (!config.states[target]) return false;
+    // guard holds result
     if (guard && !guard(partial())) return false;
 
     // Invoke exit effects

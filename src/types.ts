@@ -62,3 +62,8 @@ export type OMachine = { [key: string]: Machine<never> };
 export type ParallelMachine<T extends OMachine> = T & {
   send(event: Event): void;
 };
+
+export enum MachineErrors {
+  init = 'Invalid initial state',
+  target = 'A non-configured state is targeted in a transition',
+}
