@@ -94,11 +94,11 @@ export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
   }
 
   // function to execute actions within a machine
-  function execute(actions?: Action<T>[], payload?: unknown): void {
+  function execute(event: Event, actions?: Action<T>[]): void {
     if (!actions) return;
     // Run over all actions
     for (const action of actions) {
-      const _res = action(partial(), payload);
+      const _res = action(partial(), event);
 
       if (!_res) continue;
       const aObj = _res as ActionObject;
@@ -125,21 +125,21 @@ export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
     if (guard && !guard(partial())) return false;
 
     // Invoke exit effects
-    execute(config.states[_state.current]._exit, event.payload);
+    execute(event, config.states[_state.current]._exit);
     // Invoke transition effects
-    execute(actions, event.payload);
+    execute(event, actions);
 
     // update state
     _state.current = target;
 
     // Invoke entry effects
-    execute(config.states[_state.current]._entry, event.payload);
-    _listeners.forEach((listener) => listener(partial(), event.payload));
+    execute(event, config.states[_state.current]._entry);
+    _listeners.forEach((listener) => listener(partial(), event));
     return true;
   }
 
   // Invoke entry if existing on the initial state
-  execute(config.states[config.init]._entry);
+  execute({ type: '__init__' }, config.states[config.init]._entry);
   return new Proxy(_state, { set: () => true });
 }
 

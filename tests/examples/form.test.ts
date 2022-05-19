@@ -1,5 +1,5 @@
 import { machine, send, assign } from '../../src';
-import { MachineState, State } from '../../src/types';
+import { MachineState, State, Event } from '../../src/types';
 
 type O = Record<string, unknown>;
 type Context = {
@@ -18,9 +18,9 @@ function isValid(s: MachineState<Context>) {
   return false;
 }
 
-function updateEntry(p: MachineState<Context>, pl: unknown) {
+function updateEntry(p: MachineState<Context>, e: Event) {
   const _ctx = { ...p.context };
-  const _pl = pl as { key: string; value: unknown };
+  const _pl = e.payload as { key: string; value: unknown };
   _ctx.values[_pl.key] = _pl.value;
   _ctx.errors[_pl.key] = '';
   return assign(_ctx);
@@ -30,7 +30,7 @@ const config: Record<string, State<Context>> = {
   init: { LOADED: 'ready' },
   ready: {
     CHANGED: 'touched',
-    _entry: [(_p, pl) => assign({ values: pl, errors: {} })],
+    _entry: [(_p, e) => assign({ values: e.payload, errors: {} })],
   },
   touched: {
     CHANGED: 'touched',
@@ -50,10 +50,10 @@ const config: Record<string, State<Context>> = {
   invalid: {
     CHANGED: 'touched',
     _entry: [
-      (p: MachineState<Context>, pl) =>
+      (p: MachineState<Context>, e) =>
         assign({
           ...p.context,
-          errors: pl as O,
+          errors: e.payload as O,
         }),
     ],
   },

@@ -8,9 +8,15 @@ export type O = {
   [key: string]: unknown;
 };
 
+export type Event = {
+  type: string;
+  payload?: unknown;
+  delay?: number;
+};
+
 export type Action<T extends O> = (
   partial: MachineState<T>,
-  payload?: unknown
+  event: Event
 ) => void | ActionObject;
 
 export type ActionObject = {
@@ -29,12 +35,6 @@ export type State<T extends O> = {
   _entry?: Action<T>[];
   _exit?: Action<T>[];
   [key: string]: string | Transition<T> | Action<T>[] | undefined;
-};
-
-export type Event = {
-  type: string;
-  payload?: unknown;
-  delay?: number;
 };
 
 export type MachineConfig<T extends O> = {

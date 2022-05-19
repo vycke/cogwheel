@@ -1,21 +1,21 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { machine, assign } from '../../src';
-import { Action, MachineState, Machine, State } from '../../src/types';
+import { Action, MachineState, Machine, State, Event } from '../../src/types';
 
 type Context = { data: object | null; errors: object | null; valid: boolean };
 type Modifier = { key: string; value: unknown };
 
-const successEntry: Action<Context> = (p: MachineState<Context>, payload) =>
-  assign({ ...p.context, data: payload, errors: null, valid: true });
+const successEntry: Action<Context> = (p: MachineState<Context>, e: Event) =>
+  assign({ ...p.context, data: e.payload, errors: null, valid: true });
 
-const errorEntry: Action<Context> = (p: MachineState<Context>, payload) =>
-  assign({ ...p.context, errors: payload, data: null, valid: false });
+const errorEntry: Action<Context> = (p: MachineState<Context>, e: Event) =>
+  assign({ ...p.context, errors: e.payload, data: null, valid: false });
 
 const pendingEntry: Action<Context> = (p: MachineState<Context>) =>
   assign({ ...p.context, errors: null });
 
-const invalidEntry: Action<Context> = (p: MachineState<Context>, payload) => {
-  const _pl = payload as Modifier;
+const invalidEntry: Action<Context> = (p: MachineState<Context>, e: Event) => {
+  const _pl = e.payload as Modifier;
   return assign({
     ...p.context,
     data: {

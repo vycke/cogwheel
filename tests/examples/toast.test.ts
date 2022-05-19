@@ -1,14 +1,14 @@
 import { assign, machine, send } from '../../src';
-import { ActionObject, MachineState, O, State } from '../../src/types';
+import { ActionObject, MachineState, O, State, Event } from '../../src/types';
 import { delay } from '../helpers';
 
 type Context = { label: string };
 
 function valueAssign<T extends O>(
   s: MachineState<Context>,
-  payload: unknown
+  e: Event
 ): ActionObject {
-  return assign({ ...s.context, ...(payload as T) });
+  return assign({ ...s.context, ...(e.payload as T) });
 }
 
 const config: Record<string, State<Context>> = {

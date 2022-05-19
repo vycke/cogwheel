@@ -6,7 +6,7 @@ You are able to define 'actions'. These actions are executed when you leave a st
 import type { MachineState } from 'cogwheel/types';
 // MachineState = { current, id, context };
 type Ctx = {};
-const action = (state: MachineState<Ctx>, payload?: any) => { ... }
+const action = (state: MachineState<Ctx>, event: Event) => { ... }
 ```
 
 > NOTE: `_entry` and `_exit` are reserved transition names to provide for a simplified API.
@@ -27,13 +27,13 @@ const config = {
     },
     red: {
       _entry: [
-        (state, payload) => {
-          console.log(state, payload);
+        (state, event) => {
+          console.log(state, event);
         },
       ],
       _exit: [
-        (state, payload) => {
-          console.log(state, payload);
+        (state, event) => {
+          console.log(state, event);
         },
         (state) => {
           console.log(state);
@@ -60,7 +60,7 @@ const config = {
     green: { CHANGE: 'red' },
     red: {
       CHANGE: 'green',
-      _entry: [() => send('CHANGE', {}, 3000)],
+      _entry: [() => send({ type: 'CHANGE', delay: 3000 })],
     },
   },
 };
@@ -86,8 +86,8 @@ const config = {
     yellow: {
       CHANGE: 'green',
       _entry: [
-        (state, payload) =>
-          assign({ count: state.context.count + payload.count }),
+        (state, event) =>
+          assign({ count: state.context.count + event.payload.count }),
       ],
     },
   },
