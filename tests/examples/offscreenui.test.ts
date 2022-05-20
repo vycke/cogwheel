@@ -2,7 +2,7 @@ import { machine, send } from '../../src';
 import { delay } from '../helpers';
 
 function toggling() {
-  return send({ type: 'TOGGLE', delay: 10 });
+  return send({ type: 'TOGGLE' }, 10);
 }
 
 const config = {

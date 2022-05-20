@@ -10,13 +10,11 @@ export type O = {
 
 export type Event = {
   type: string;
-  payload?: unknown;
-  delay?: number;
 };
 
-export type Action<T extends O> = (
-  partial: MachineState<T>,
-  event: Event
+export type Action<C extends O, E extends Event> = (
+  partial: MachineState<C>,
+  event: E
 ) => void | ActionObject;
 
 export type ActionObject = {
@@ -24,43 +22,35 @@ export type ActionObject = {
   payload: O;
 };
 
-export type Guard<T extends O> = (state: MachineState<T>) => boolean;
-export type Transition<T extends O> = {
+export type Guard<C extends O> = (state: MachineState<C>) => boolean;
+export type Transition<C extends O, E extends Event> = {
   target: string;
-  guard?: Guard<T>;
-  actions?: Action<T>[];
+  guard?: Guard<C>;
+  actions?: Action<C, E>[];
 };
 
-export type State<T extends O> = {
-  _entry?: Action<T>[];
-  _exit?: Action<T>[];
-  [key: string]: string | Transition<T> | Action<T>[] | undefined;
+export type State<C extends O, E extends Event> = {
+  _entry?: Action<C, E>[];
+  _exit?: Action<C, E>[];
+  [key: string]: string | Transition<C, E> | Action<C, E>[] | undefined;
 };
 
-export type MachineConfig<T extends O> = {
+export type MachineConfig<C extends O, E extends Event> = {
   init: string;
-  states: Record<string, State<T>>;
-  context?: T;
+  states: Record<string, State<C, E>>;
+  context?: C;
 };
 
 // Partial machine
-export type MachineState<T extends O> = {
+export type MachineState<C extends O> = {
   current: string;
   id: string;
-  context: T;
+  context: C;
 };
 
-export type Machine<T extends O> = MachineState<T> & {
-  send(event: Event): void;
-  listen(listener?: Action<T>): () => void;
-};
-
-// never is used as the type for the Machine is not important in this stage
-// and to avoid sending multiple generics
-export type OMachine = { [key: string]: Machine<never> };
-
-export type ParallelMachine<T extends OMachine> = T & {
-  send(event: Event): void;
+export type Machine<C extends O, E extends Event> = MachineState<C> & {
+  send(event: E, delay?: number): void;
+  listen(listener?: Action<C, E>): () => void;
 };
 
 export enum MachineErrors {

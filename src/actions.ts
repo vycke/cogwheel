@@ -2,8 +2,8 @@
 import { ActionObject, ActionTypes, Event, O } from './types';
 
 // Action creator
-export function send(event: Event): ActionObject {
-  return { type: ActionTypes.send, payload: event };
+export function send(event: Event, delay?: number): ActionObject {
+  return { type: ActionTypes.send, payload: { event, delay } };
 }
 
 // Action creator
