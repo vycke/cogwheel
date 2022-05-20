@@ -15,16 +15,14 @@ const configDefault = {
   red: {},
 };
 
-const countAssign: Action<Context> = function (
-  p: MachineState<Context>,
-  e: Event
-) {
-  if ((e.payload as Context)?.count)
-    return assign({ count: p.context.count + (e.payload as Context).count });
+const countAssign: Action<Context, CountEvent> = function (p, e) {
+  if (e?.count) return assign({ count: p.context.count + e.count });
   return assign({ count: p.context.count + 1 });
 };
 
-const logAction: Action<{}> = function (state): void {
+type CountEvent = { type: string; count?: number };
+
+const logAction: Action<{}, Event> = function (state) {
   cb(state);
 };
 
@@ -135,7 +133,7 @@ test('Entry actions - auto-transition', async () => {
     },
     red: {
       CHANGE: 'green',
-      _entry: [() => send({ type: 'CHANGE', delay: 100 })],
+      _entry: [() => send({ type: 'CHANGE' }, 100)],
     },
   };
 
@@ -191,13 +189,13 @@ test('Entry actions - update context based on transition input', () => {
     },
   };
 
-  const service = machine<Context>({
+  const service = machine<Context, CountEvent>({
     init: 'start',
     states: configStart,
     context: { count: 0 },
   });
   expect(service.context.count).toBe(0);
-  service.send({ type: 'CHANGE', payload: { count: 2 } });
+  service.send({ type: 'CHANGE', count: 2 });
   expect(service.current).toBe('end');
   expect(service.context.count).toBe(2);
 });

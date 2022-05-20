@@ -12,7 +12,6 @@ import {
   MachineState,
   MachineErrors,
 } from './types';
-import { parallel } from './parallel';
 
 // deep-freeze for immutability
 function freeze<T extends O>(obj: T): T {
@@ -40,8 +39,8 @@ function uuid(): string {
   return 'xxxxx'.replace(/[x]/g, () => ((Math.random() * 16) | 0).toString(16));
 }
 
-function validate<T extends O>(
-  config: MachineConfig<T>
+function validate<C extends O, E extends Event>(
+  config: MachineConfig<C, E>
 ): MachineErrors | undefined {
   if (!config.states[config.init]) return MachineErrors.init;
 
@@ -52,7 +51,7 @@ function validate<T extends O>(
       if (['_exit', '_entry'].includes(key)) return;
 
       const target =
-        typeof value === 'string' ? value : (value as Transition<T>).target;
+        typeof value === 'string' ? value : (value as Transition<C, E>).target;
 
       if (!states.includes(target)) valid = false;
     });
@@ -62,39 +61,40 @@ function validate<T extends O>(
 }
 
 // wrap a machine in a service
-export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
+export function machine<C extends O, E extends Event = Event>(
+  config: MachineConfig<C, E>
+): Machine<C, E> {
   // Throw error if configuration is invalid
   const isInvalid = validate(config);
   if (isInvalid) throw Error(isInvalid);
   let _timeout: ReturnType<typeof setTimeout>;
-  const _listeners: Action<T>[] = [];
-  const _state: Machine<T> = {
+  const _listeners: Action<C, E>[] = [];
+  const _state: Machine<C, E> = {
     id: uuid(),
     current: config.init,
     send,
-    context: freeze(config.context || ({} as T)),
-    listen: (l: Action<T>) => {
+    context: freeze(config.context || ({} as C)),
+    listen: (l: Action<C, E>) => {
       _listeners.push(l);
       return () => _listeners.splice(_listeners.indexOf(l) >>> 0, 1);
     },
   };
 
   // Get partial information of the machine
-  function partial(): MachineState<T> {
+  function partial(): MachineState<C> {
     const { id, context, current } = _state;
-    return { id, current, context: copy<T>(context) };
+    return { id, current, context: copy<C>(context) };
   }
 
   // Execution of a send action
-  function send(event: Event): boolean | void {
+  function send(event: E, delay?: number): boolean | void {
     clearTimeout(_timeout);
-    if (event.delay)
-      _timeout = setTimeout(() => transition(event), event.delay);
+    if (delay) _timeout = setTimeout(() => transition(event), delay);
     else return transition(event);
   }
 
   // function to execute actions within a machine
-  function execute(event: Event, actions?: Action<T>[]): void {
+  function execute(event: E, actions?: Action<C, E>[]): void {
     if (!actions) return;
     // Run over all actions
     for (const action of actions) {
@@ -104,9 +104,9 @@ export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
       const aObj = _res as ActionObject;
 
       if (aObj.type === ActionTypes.assign)
-        _state.context = freeze<T>(aObj.payload as T);
+        _state.context = freeze<C>(aObj.payload as C);
       if (aObj.type === ActionTypes.send) {
-        send(aObj.payload as Event);
+        send(aObj.payload.event as E, aObj.payload.delay as number);
         // No other actions are executed after a send
         break;
       }
@@ -114,12 +114,12 @@ export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
   }
 
   // function to execute the state machine
-  function transition(event: Event): boolean {
+  function transition(event: E): boolean {
     let target, guard, actions;
     const transition = config.states[_state.current][event.type];
     if (!transition) return false;
     if (typeof transition === 'string') target = transition;
-    else ({ target, guard, actions } = transition as Transition<T>);
+    else ({ target, guard, actions } = transition as Transition<C, E>);
 
     // guard holds result
     if (guard && !guard(partial())) return false;
@@ -139,9 +139,9 @@ export function machine<T extends O>(config: MachineConfig<T>): Machine<T> {
   }
 
   // Invoke entry if existing on the initial state
-  execute({ type: '__init__' }, config.states[config.init]._entry);
+  execute({ type: '__init__' } as E, config.states[config.init]._entry);
   return new Proxy(_state, { set: () => true });
 }
 
 // Export action creators & utilities
-export { send, assign, parallel };
+export { send, assign };

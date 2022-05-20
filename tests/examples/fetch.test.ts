@@ -1,32 +1,33 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { machine, assign } from '../../src';
-import { Action, MachineState, Machine, State, Event } from '../../src/types';
+import { Action, Machine, State, O, Event } from '../../src/types';
 
-type Context = { data: object | null; errors: object | null; valid: boolean };
-type Modifier = { key: string; value: unknown };
+type Context = { data: O | null; errors: O | null; valid: boolean };
+type FetchEvent = Event & { data?: unknown; errors?: unknown };
+type ModifierEvent = Event & { key: string; value: unknown };
+type MachineEvent = Event | ModifierEvent | FetchEvent;
 
-const successEntry: Action<Context> = (p: MachineState<Context>, e: Event) =>
-  assign({ ...p.context, data: e.payload, errors: null, valid: true });
+const successEntry: Action<Context, FetchEvent> = (p, e) =>
+  assign({ ...p.context, data: e.data, errors: null, valid: true });
+const errorEntry: Action<Context, FetchEvent> = (p, e) =>
+  assign({ ...p.context, errors: e.errors, data: null, valid: false });
 
-const errorEntry: Action<Context> = (p: MachineState<Context>, e: Event) =>
-  assign({ ...p.context, errors: e.payload, data: null, valid: false });
-
-const pendingEntry: Action<Context> = (p: MachineState<Context>) =>
+const pendingEntry: Action<Context, FetchEvent> = (p) =>
   assign({ ...p.context, errors: null });
 
-const invalidEntry: Action<Context> = (p: MachineState<Context>, e: Event) => {
-  const _pl = e.payload as Modifier;
+const invalidEntry: Action<Context, MachineEvent> = (p, e) => {
+  const _e = e as ModifierEvent;
   return assign({
     ...p.context,
     data: {
       ...p.context.data,
-      [_pl.key]: _pl.value,
+      [_e.key]: _e.value,
     },
     valid: false,
   });
 };
 
-const config: Record<string, State<Context>> = {
+const config: Record<string, State<Context, MachineEvent>> = {
   idle: { STARTED: 'pending' },
   pending: { FINISHED: 'success', FAILED: 'error', _entry: [pendingEntry] },
   success: { STARTED: 'pending', MODIFIED: 'invalid', _entry: [successEntry] },
@@ -34,7 +35,7 @@ const config: Record<string, State<Context>> = {
   error: { STARTED: 'pending', _entry: [errorEntry] },
 };
 
-let service: Machine<Context>;
+let service: Machine<Context, MachineEvent>;
 const init: Context = { errors: null, data: null, valid: false };
 
 beforeEach(() => {
@@ -50,7 +51,7 @@ test('fetch - success', () => {
   service.send({ type: 'STARTED' });
   expect(service.current).toBe('pending');
   expect(service.context).toEqual(init);
-  service.send({ type: 'FINISHED', payload: { key: 'test' } });
+  service.send({ type: 'FINISHED', data: { key: 'test' } });
   expect(service.current).toBe('success');
   expect(service.context).toEqual({
     data: { key: 'test' },
@@ -71,7 +72,7 @@ test('fetch - error', () => {
   service.send({ type: 'STARTED' });
   expect(service.current).toBe('pending');
   expect(service.context).toEqual(init);
-  service.send({ type: 'FAILED', payload: { key: 'required' } });
+  service.send({ type: 'FAILED', errors: { key: 'required' } });
   expect(service.current).toBe('error');
   expect(service.context).toEqual({
     errors: { key: 'required' },
@@ -108,8 +109,8 @@ test('fetch - jump to success', () => {
 test('fetch - invalidated & refetched', () => {
   expect(service.current).toBe('idle');
   service.send({ type: 'STARTED' });
-  service.send({ type: 'FINISHED', payload: { key: 'test' } });
-  service.send({ type: 'MODIFIED', payload: { key: 'key', value: 'updated' } });
+  service.send({ type: 'FINISHED', data: { key: 'test' } });
+  service.send({ type: 'MODIFIED', key: 'key', value: 'updated' });
   expect(service.current).toBe('invalid');
   expect(service.context).toEqual({
     errors: null,

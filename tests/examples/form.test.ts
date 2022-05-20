@@ -7,6 +7,11 @@ type Context = {
   errors: O;
 };
 
+type InitEvent = { type: string; values: O };
+type ErrorEvent = { type: string; errors: O };
+type ModifierEvent = { type: string; key: string; value: unknown };
+type FormEvent = Event | InitEvent | ModifierEvent | ErrorEvent;
+
 function validator(ctx: Context) {
   if (ctx.values.key === 'test') return {};
   return { key: 'required' };
@@ -18,58 +23,67 @@ function isValid(s: MachineState<Context>) {
   return false;
 }
 
-function updateEntry(p: MachineState<Context>, e: Event) {
+function updateAction(p: MachineState<Context>, e: FormEvent) {
   const _ctx = { ...p.context };
-  const _pl = e.payload as { key: string; value: unknown };
-  _ctx.values[_pl.key] = _pl.value;
-  _ctx.errors[_pl.key] = '';
+  const _e = e as ModifierEvent;
+  _ctx.values[_e.key] = _e.value;
+  _ctx.errors[_e.key] = '';
   return assign(_ctx);
 }
 
-const config: Record<string, State<Context>> = {
+function initAction(_p: MachineState<Context>, e: FormEvent) {
+  return assign({ values: (e as InitEvent).values, errors: {} });
+}
+
+function errorAction(p: MachineState<Context>, e: FormEvent) {
+  return assign({
+    ...p.context,
+    errors: (e as ErrorEvent).errors,
+  });
+}
+
+function validationAction(p: MachineState<Context>) {
+  if (isValid(p)) return send({ type: 'SUBMITTED' });
+  else
+    return send({
+      type: 'REJECTED',
+      errors: validator(p.context),
+    } as ErrorEvent);
+}
+
+const config: Record<string, State<Context, FormEvent>> = {
   init: { LOADED: 'ready' },
   ready: {
     CHANGED: 'touched',
-    _entry: [(_p, e) => assign({ values: e.payload, errors: {} })],
+    _entry: [initAction],
   },
   touched: {
     CHANGED: 'touched',
     SUBMITTED: 'validating',
-    _entry: [updateEntry],
+    _entry: [updateAction],
   },
   validating: {
     SUBMITTED: { target: 'submitting', guard: isValid },
     REJECTED: { target: 'invalid', guard: (ctx) => !isValid(ctx) },
-    _entry: [
-      (p: MachineState<Context>) => {
-        if (isValid(p)) return send({ type: 'SUBMITTED' });
-        else return send({ type: 'REJECTED', payload: validator(p.context) });
-      },
-    ],
+    _entry: [validationAction],
   },
   invalid: {
     CHANGED: 'touched',
-    _entry: [
-      (p: MachineState<Context>, e) =>
-        assign({
-          ...p.context,
-          errors: e.payload as O,
-        }),
-    ],
+    _entry: [errorAction],
   },
   submitting: { FINISHED: 'ready' },
 };
 
 test('Form - happy flow', () => {
-  const service = machine<Context>({ init: 'init', states: config });
+  const service = machine<Context, FormEvent>({ init: 'init', states: config });
   expect(service.current).toBe('init');
-  service.send({ type: 'LOADED', payload: { key: '' } });
+  service.send({ type: 'LOADED', values: { key: '' } });
   expect(service.current).toBe('ready');
   expect(service.context.values).toEqual({ key: '' });
-  service.send({ type: 'CHANGED', payload: { key: 'key', value: 't' } });
+  service.send({ type: 'CHANGED', key: 'key', value: 't' });
   expect(service.current).toBe('touched');
   expect(service.context.values).toEqual({ key: 't' });
-  service.send({ type: 'CHANGED', payload: { key: 'key', value: 'test' } });
+  service.send({ type: 'CHANGED', key: 'key', value: 'test' });
   expect(service.current).toBe('touched');
   expect(service.context.values).toEqual({ key: 'test' });
   service.send({ type: 'SUBMITTED' });
@@ -80,22 +94,22 @@ test('Form - happy flow', () => {
 });
 
 test('Form - happy flow', () => {
-  const service = machine<Context>({ init: 'init', states: config });
+  const service = machine<Context, FormEvent>({ init: 'init', states: config });
   expect(service.current).toBe('init');
-  service.send({ type: 'LOADED', payload: { key: '' } });
+  service.send({ type: 'LOADED', values: { key: '' } });
   expect(service.current).toBe('ready');
   expect(service.context.values).toEqual({ key: '' });
-  service.send({ type: 'CHANGED', payload: { key: 'key', value: 't' } });
+  service.send({ type: 'CHANGED', key: 'key', value: 't' });
   expect(service.current).toBe('touched');
   expect(service.context.values).toEqual({ key: 't' });
-  service.send({ type: 'CHANGED', payload: { key: 'key', value: '' } });
+  service.send({ type: 'CHANGED', key: 'key', value: '' });
   expect(service.current).toBe('touched');
   expect(service.context.values).toEqual({ key: '' });
   service.send({ type: 'SUBMITTED' });
   expect(service.current).toBe('invalid');
   expect(service.context.values).toEqual({ key: '' });
   expect(service.context.errors).toEqual({ key: 'required' });
-  service.send({ type: 'CHANGED', payload: { key: 'key', value: 't' } });
+  service.send({ type: 'CHANGED', key: 'key', value: 't' });
   expect(service.current).toBe('touched');
   expect(service.context.values).toEqual({ key: 't' });
   expect(service.context.errors).toEqual({ key: '' });
