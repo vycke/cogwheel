@@ -8,20 +8,20 @@ This state machine allows you to maintain the state of a single fetch operation 
 
 ```js
 // ACTIONS
-const successEntry = (state, payload) =>
-  assign({ ...state.context, data: payload, errors: null, valid: true });
+const successEntry = (state, { data }) =>
+  assign({ ...state.context, data, errors: null, valid: true });
 
-const errorEntry = (state, payload) =>
-  assign({ ...state, context, errors: payload, data: null, valid: false });
+const errorEntry = (state, { errors }) =>
+  assign({ ...state, context, errors, data: null, valid: false });
 
 const pendingEntry = (state) => assign({ ...state.context, errors: null });
 
-const invalidEntry = (state, payload) =>
+const invalidEntry = (state, { key, value }) =>
   assign({
     ...state.context,
     data: {
       ...state.context.data,
-      [payload.key]: payload.value,
+      [key]: value,
     },
     valid: false,
   });
@@ -43,9 +43,9 @@ const config = {
 };
 
 // EXAMPLE USAGE
-machine.send({ type: 'FINISHED', payload: data });
-machine.send({ type: 'FAILED', payload: errors });
-machine.send({ type: 'MODIFIED', payload: { key: 'test', value: 'test' } });
+machine.send({ type: 'FINISHED', data });
+machine.send({ type: 'FAILED', errors });
+machine.send({ type: 'MODIFIED', key: 'test', value: 'test' });
 ```
 
 ## Offscreen UI elements
@@ -58,8 +58,7 @@ Think of modals, sidebars, etc. that you want to appear/dissappear on the screen
 import { send } from 'cogwheel';
 
 // ACTIONS
-const toggling = (state) =>
-  send({ type: 'TOGGLE', payload: state.context, delay: 10 });
+const toggling = (state) => send({ type: 'TOGGLE' }, 10);
 
 // CONFIG
 const config = {
@@ -90,9 +89,8 @@ const config = {
       CLOSED: 'invisible',
       OPENED: 'visible',
       _entry: [
-        (state, payload) => assign({ ...state.context, ...payload }),
-        (state) =>
-          send({ type: 'CLOSED', payload: state.context, delay: 6000 }),
+        (state, { label }) => assign({ ...state.context, label }),
+        (state) => send({ type: 'CLOSED' }, 6000),
       ],
     },
     invisible: { OPENED: 'visible' },
@@ -100,7 +98,7 @@ const config = {
 };
 
 // EXAMPLE USAGE
-machine.send({ type: 'OPENED', payload: { label: 'my toast message' } });
+machine.send({ type: 'OPENED', label: 'my toast message' });
 ```
 
 ## Forms
@@ -122,10 +120,10 @@ function isValid(ctx) {
   return false;
 }
 
-function updateEntry(state, payload) {
+function updateEntry(state, { key, value }) {
   const _ctx = { ...state.context };
-  _ctx.values[payload.key] = payload.value;
-  _ctx.errors[payload.key] = '';
+  _ctx.values[key] = value;
+  _ctx.errors[key] = '';
   return assign(_ctx);
 }
 
@@ -141,7 +139,7 @@ const config = {
     init: { LOADED: 'ready' },
     ready: {
       CHANGED: 'touched',
-      _entry: [(_s, pl) => assign({ values: pl, errors: null })],
+      _entry: [(_s, { values }) => assign({ values, errors: null })],
     },
     touched: {
       CHANGED: 'touched',
@@ -155,7 +153,7 @@ const config = {
     },
     invalid: {
       CHANGED: 'touched',
-      _entry: [(s, values) => assign({ ...s.context, errors: values })],
+      _entry: [(s, { errors }) => assign({ ...s.context, errors })],
     },
     submitting: { FINISHED: 'ready' },
   },
@@ -205,8 +203,7 @@ const config = {
     authenticated: {
       SIGNOUT_STARTED: 'signing_out',
       EXPIRED: 'expired',
-      _entry: (s) =>
-        send({ type: 'EXPIRED', payload: s.context, delay: 90000 }),
+      _entry: () => send({ type: 'EXPIRED' }, 90000),
     },
     expired: { REFRESH_STARTED: 'refreshing' },
     signing_out: { FINISHED: 'not_authenticated' },

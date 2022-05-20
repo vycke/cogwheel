@@ -50,7 +50,7 @@ You are free to define actions in the way you want, but there are helper functio
 
 ## `send` action creator
 
-The `send(event)` action creator allows you to automatically fire a new (delayed) transition on entry of a state.
+The `send(event, delay?: number)` action creator allows you to automatically fire a new (delayed) transition on entry of a state.
 
 ```js
 import { send } from 'cogwheel';
@@ -60,7 +60,7 @@ const config = {
     green: { CHANGE: 'red' },
     red: {
       CHANGE: 'green',
-      _entry: [() => send({ type: 'CHANGE', delay: 3000 })],
+      _entry: [() => send({ type: 'CHANGE' }, 3000)],
     },
   },
 };
@@ -86,15 +86,14 @@ const config = {
     yellow: {
       CHANGE: 'green',
       _entry: [
-        (state, event) =>
-          assign({ count: state.context.count + event.payload.count }),
+        (state, event) => assign({ count: state.context.count + event.count }),
       ],
     },
   },
 };
 
 // { count: 2 } corresponds with the 'values' in the entry action of the red state
-machine.send({ type: 'CHANGE', payload: { count: 2 } });
+machine.send({ type: 'CHANGE', count: 2 });
 ```
 
 ## Listeners

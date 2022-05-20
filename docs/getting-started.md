@@ -1,6 +1,6 @@
 # Getting started
 
-A simple state machine can be initiated using the `cogwheel` function from the package. It allows you to view the current state (`machine.current`), or invoke a transition via the `.send(event: string, delay?: number, values?: object)` function. `delay` and `values` are optional input parameters.
+A simple state machine can be initiated using the `cogwheel` function from the package. It allows you to view the current state (`machine.current`), or invoke a transition via the `.send(event: Event, delay?: number)` function.
 
 ```js
 import { machine } from 'cogwheel';
@@ -16,7 +16,7 @@ const config = {
 
 const machine = machine(config);
 // machine.current = 'green'
-machine.send({ type: 'CHANGE', payload: { key: 'value' }, delay: 3000 });
+machine.send({ type: 'CHANGE', key: 'value' }, 3000);
 // machine.current = 'yellow'
 ```
 
