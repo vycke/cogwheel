@@ -24,22 +24,34 @@ export default function useMachine(config) {
 
 ## Svelte store example
 
-```js
-import { machine } from 'cogwheel';
-import { writable } from 'svelte/store';
+```ts
+import { machine as fsm } from 'cogwheel';
+import type { MachineConfig, Event, MachineState } from 'cogwheel/dist/types';
+import { readable } from 'svelte/store';
+import type { Readable } from 'svelte/store';
 
-export function machineStore(config) {
-  const machine = machine(config);
-  const { subscribe, update } = writable({
-    state: machine.current,
-    context: machine.context,
+type O = {
+  [key: string]: unknown;
+};
+
+export type ReadableMachineStore<T extends O> = Readable<MachineState<T>>;
+export type MachineStore<T extends O, E extends Event = Event> = {
+  state: ReadableMachineStore<T>;
+  send(event: E): void;
+};
+
+export function machineStore<T extends O, E extends Event = Event>(
+  config: MachineConfig<T, E>
+): MachineStore<T, E> {
+  const machine = fsm(config);
+  const { current, id, context } = machine;
+  const state = readable({ current, id, context }, (set) => {
+    return machine.listen(({ current, context }) => {
+      set({ context, current, id });
+    });
   });
 
-  machine.listen(({ current, context }) => {
-    update(() => ({ state: current, context }));
-  });
-
-  return { subscribe, send: machine.send };
+  return { state, send: machine.send };
 }
 ```
 

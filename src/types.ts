@@ -54,6 +54,6 @@ export type Machine<C extends O, E extends Event> = MachineState<C> & {
 };
 
 export enum MachineErrors {
-  init = 'Invalid initial state',
-  target = 'A non-configured state is targeted in a transition',
+  init = 'invalid initial state',
+  target = 'non-existing transition target',
 }

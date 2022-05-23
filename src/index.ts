@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { assign, send } from './actions';
 import {
   Action,
   ActionTypes,
@@ -58,6 +57,16 @@ function validate<C extends O, E extends Event>(
   });
 
   return valid ? undefined : MachineErrors.target;
+}
+
+// Action creator
+export function send(event: Event, delay?: number): ActionObject {
+  return { type: ActionTypes.send, payload: { event, delay } };
+}
+
+// Action creator
+export function assign<T extends O>(ctx: T): ActionObject {
+  return { type: ActionTypes.assign, payload: ctx };
 }
 
 // wrap a machine in a service
@@ -142,6 +151,3 @@ export function machine<C extends O, E extends Event = Event>(
   execute({ type: '__init__' } as E, config.states[config.init]._entry);
   return new Proxy(_state, { set: () => true });
 }
-
-// Export action creators & utilities
-export { send, assign };
