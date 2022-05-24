@@ -33,11 +33,6 @@ function copy<T extends O>(obj: T): T {
   return _obj;
 }
 
-// function to create random id
-function uuid(): string {
-  return 'xxxxx'.replace(/[x]/g, () => ((Math.random() * 16) | 0).toString(16));
-}
-
 function validate<C extends O, E extends Event>(
   config: MachineConfig<C, E>
 ): MachineErrors | undefined {
@@ -79,7 +74,7 @@ export function machine<C extends O, E extends Event = Event>(
   let _timeout: ReturnType<typeof setTimeout>;
   const _listeners: Action<C, E>[] = [];
   const _state: Machine<C, E> = {
-    id: uuid(),
+    id: config.id || '',
     current: config.init,
     send,
     context: freeze(config.context || ({} as C)),

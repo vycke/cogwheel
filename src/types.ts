@@ -38,6 +38,7 @@ export type State<C extends O, E extends Event> = {
 export type MachineConfig<C extends O, E extends Event> = {
   init: string;
   states: Record<string, State<C, E>>;
+  id?: string;
   context?: C;
 };
 
