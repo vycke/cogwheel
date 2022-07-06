@@ -91,10 +91,12 @@ export function machine<C extends O, E extends Event = Event>(
   }
 
   // Execution of a send action
-  function send(event: E, delay?: number): boolean | void {
+  function send(event: E, delay?: number): boolean {
     clearTimeout(_timeout);
-    if (delay) _timeout = setTimeout(() => transition(event), delay);
-    else return transition(event);
+    if (delay) {
+      _timeout = setTimeout(() => transition(event), delay);
+      return true;
+    } else return transition(event);
   }
 
   // function to execute actions within a machine

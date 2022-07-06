@@ -50,7 +50,7 @@ export type MachineState<C extends O> = {
 };
 
 export type Machine<C extends O, E extends Event> = MachineState<C> & {
-  send(event: E, delay?: number): void;
+  send(event: E, delay?: number): boolean;
   listen(listener?: Action<C, E>): () => void;
 };
 
