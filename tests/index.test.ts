@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { machine, send, assign } from '../src';
-import { Action, MachineErrors, MachineState, Event } from '../src/types';
+import { Action, MachineErrors, MachineState, Event, O } from '../src/types';
 import { delay } from './helpers';
 
 // Types
@@ -68,16 +68,6 @@ test('immutability', () => {
   expect(service.current).toBe('green');
   service.current = 'yellow';
   expect(service.current).toBe('green');
-});
-
-test('listener', () => {
-  const service = machine({ init: 'green', states: configDefault });
-  const remove = service.listen(cb);
-  service.send({ type: 'CHANGE' });
-  expect(cb.mock.calls.length).toBe(1);
-  remove();
-  service.send({ type: 'CHANGE' });
-  expect(cb.mock.calls.length).toBe(1);
 });
 
 test('Incorrect initial state', () => {
@@ -340,4 +330,45 @@ test('Actions - break after send', () => {
   service.send({ type: 'CHANGE' });
   expect(service.current).toBe('start');
   expect(service.context.count).toBe(2);
+});
+
+test('listener - default behaviour', () => {
+  const service = machine({ init: 'green', states: configDefault });
+  const remove = service.listen(cb);
+  service.send({ type: 'CHANGE' });
+  expect(cb.mock.calls.length).toBe(1);
+  remove();
+  service.send({ type: 'CHANGE' });
+  expect(cb.mock.calls.length).toBe(1);
+});
+
+// In version <=3.0 there is a bug that arrays in the context are converted
+// into objects, when accessing the context through actions, guards and
+// listeners. Accessing the context directly does not provide this issue
+// This tests validates that this does not happen anymore
+test('listener - nested context maintains state', () => {
+  type Context = { data: O };
+  type FetchEvent = Event & { data?: unknown };
+
+  const successEntry: Action<Context, FetchEvent> = (p, e) =>
+    assign({ ...p.context, data: e.data });
+  const service = machine({
+    init: 'pending',
+    states: {
+      pending: { FINISHED: 'success' },
+      success: { _entry: [successEntry] },
+    },
+  });
+  const remove = service.listen(cb);
+  expect(service.current).toBe('pending');
+  service.send({ type: 'FINISHED', data: { arr: ['test'] } });
+  expect(service.current).toBe('success');
+  expect(service.context).toEqual({ data: { arr: ['test'] } });
+  expect(cb.mock.calls[0][0]).toEqual({
+    id: '',
+    current: 'success',
+    context: { data: { arr: ['test'] } },
+  });
+
+  remove();
 });
