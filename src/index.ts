@@ -23,16 +23,6 @@ function freeze<T extends O>(obj: T): T {
   return obj;
 }
 
-// copy frozen object
-function copy<T extends O>(obj: T): T {
-  const _obj = Object.assign({}, obj);
-  Object.keys(_obj).forEach((prop: string) => {
-    if (typeof obj[prop] === 'object' && obj[prop] !== null)
-      (_obj[prop] as O) = copy(_obj[prop] as O);
-  });
-  return _obj;
-}
-
 function validate<C extends O, E extends Event>(
   config: MachineConfig<C, E>
 ): MachineErrors | undefined {
@@ -87,7 +77,7 @@ export function machine<C extends O, E extends Event = Event>(
   // Get partial information of the machine
   function partial(): MachineState<C> {
     const { id, context, current } = _state;
-    return { id, current, context: copy<C>(context) };
+    return { id, current, context: JSON.parse(JSON.stringify(context)) };
   }
 
   // Execution of a send action
