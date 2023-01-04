@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { machine, assign } from '../../src';
+import { machine } from '../../src';
 import { Action, Machine, State, O, Event } from '../../src/types';
 
 type Context = { data: O | null; errors: O | null; valid: boolean };
@@ -7,17 +7,27 @@ type FetchEvent = Event & { data?: unknown; errors?: unknown };
 type ModifierEvent = Event & { key: string; value: unknown };
 type MachineEvent = Event | ModifierEvent | FetchEvent;
 
-const successEntry: Action<Context, FetchEvent> = (p, e) =>
-  assign({ ...p.context, data: e.data, errors: null, valid: true });
-const errorEntry: Action<Context, FetchEvent> = (p, e) =>
-  assign({ ...p.context, errors: e.errors, data: null, valid: false });
+const successEntry: Action<Context, FetchEvent> = (p, e, a) =>
+  a.assign({
+    ...p.context,
+    data: e.data,
+    errors: null,
+    valid: true,
+  } as Context);
+const errorEntry: Action<Context, FetchEvent> = (p, e, a) =>
+  a.assign({
+    ...p.context,
+    errors: e.errors,
+    data: null,
+    valid: false,
+  } as Context);
 
-const pendingEntry: Action<Context, FetchEvent> = (p) =>
-  assign({ ...p.context, errors: null });
+const pendingEntry: Action<Context, FetchEvent> = (p, _e, a) =>
+  a.assign({ ...p.context, errors: null });
 
-const invalidEntry: Action<Context, MachineEvent> = (p, e) => {
+const invalidEntry: Action<Context, MachineEvent> = (p, e, a) => {
   const _e = e as ModifierEvent;
-  return assign({
+  a.assign({
     ...p.context,
     data: {
       ...p.context.data,

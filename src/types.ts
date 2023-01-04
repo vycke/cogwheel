@@ -1,9 +1,4 @@
 /* eslint-disable @typescript-eslint/ban-types */
-export enum ActionTypes {
-  send,
-  assign,
-}
-
 export type O = {
   [key: string]: unknown;
 };
@@ -12,15 +7,22 @@ export type Event = {
   type: string;
 };
 
+type Send<E extends Event> = (event: E, delay?: number) => boolean;
+type Assign<C extends O> = (ctx: C) => void;
+type Listen<C extends O, E extends Event> = (
+  listener: Action<C, E>
+) => () => void;
+
+export type Callbacks<C extends O, E extends Event> = {
+  send: Send<E>;
+  assign: Assign<C>;
+};
+
 export type Action<C extends O, E extends Event> = (
   partial: MachineState<C>,
-  event: E
-) => void | ActionObject;
-
-export type ActionObject = {
-  type: ActionTypes;
-  payload: O;
-};
+  event: E,
+  callbacks: Callbacks<C, E>
+) => void;
 
 export type Guard<C extends O> = (state: MachineState<C>) => boolean;
 export type Transition<C extends O, E extends Event> = {
@@ -50,8 +52,8 @@ export type MachineState<C extends O> = {
 };
 
 export type Machine<C extends O, E extends Event> = MachineState<C> & {
-  send(event: E, delay?: number): boolean;
-  listen(listener?: Action<C, E>): () => void;
+  send: Send<E>;
+  listen: Listen<C, E>;
 };
 
 export enum MachineErrors {

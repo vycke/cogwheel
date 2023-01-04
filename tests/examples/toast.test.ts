@@ -1,18 +1,19 @@
-import { assign, machine, send } from '../../src';
+/* eslint-disable @typescript-eslint/ban-types */
+import { machine } from '../../src';
 import { Event, State, Action } from '../../src/types';
 import { delay } from '../helpers';
 
 type Context = { label: string };
 type ToastEvent = Event & { label?: string };
 
-const valueAssign: Action<Context, ToastEvent> = (p, e) =>
-  assign({ ...p.context, label: e.label });
+const valueAssign: Action<Context, ToastEvent> = (p, e, a) =>
+  a.assign({ ...p.context, label: e.label || '' });
 
 const config: Record<string, State<Context, ToastEvent>> = {
   visible: {
     CLOSED: 'invisible',
     OPENED: 'visible',
-    _entry: [valueAssign, () => send({ type: 'CLOSED' }, 10)],
+    _entry: [valueAssign, (_p, _e, a) => a.send({ type: 'CLOSED' }, 10)],
   },
   invisible: { OPENED: 'visible' },
 };

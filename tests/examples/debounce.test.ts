@@ -1,12 +1,14 @@
-import { machine, send } from '../../src';
+/* eslint-disable @typescript-eslint/ban-types */
+import { machine } from '../../src';
+import { Event, State } from '../../src/types';
 import { delay } from '../helpers';
 
-const config = {
+const config: Record<string, State<{}, Event>> = {
   init: { CHANGED: 'debouncing' },
   debouncing: {
     GO: 'executing',
     CHANGED: 'debouncing',
-    _entry: [() => send({ type: 'GO' }, 10)],
+    _entry: [(_p, _e, a) => a.send({ type: 'GO' }, 10)],
   },
   executing: { FINISHED: 'init' },
 };

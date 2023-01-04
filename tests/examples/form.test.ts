@@ -1,5 +1,6 @@
-import { machine, send, assign } from '../../src';
-import { MachineState, State, Event } from '../../src/types';
+/* eslint-disable @typescript-eslint/ban-types */
+import { machine } from '../../src';
+import { MachineState, State, Event, Action } from '../../src/types';
 
 type O = Record<string, unknown>;
 type Context = {
@@ -23,33 +24,49 @@ function isValid(s: MachineState<Context>) {
   return false;
 }
 
-function updateAction(p: MachineState<Context>, e: FormEvent) {
+const updateAction: Action<Context, FormEvent> = (
+  p: MachineState<Context>,
+  e: FormEvent,
+  actions
+) => {
   const _ctx = { ...p.context };
   const _e = e as ModifierEvent;
   _ctx.values[_e.key] = _e.value;
   _ctx.errors[_e.key] = '';
-  return assign(_ctx);
-}
+  actions.assign(_ctx);
+};
 
-function initAction(_p: MachineState<Context>, e: FormEvent) {
-  return assign({ values: (e as InitEvent).values, errors: {} });
-}
+const initAction: Action<Context, FormEvent> = (
+  _p: MachineState<Context>,
+  e: FormEvent,
+  actions
+) => {
+  actions.assign({ values: (e as InitEvent).values, errors: {} });
+};
 
-function errorAction(p: MachineState<Context>, e: FormEvent) {
-  return assign({
+const errorAction: Action<Context, FormEvent> = (
+  p: MachineState<Context>,
+  e: FormEvent,
+  actions
+) => {
+  actions.assign({
     ...p.context,
     errors: (e as ErrorEvent).errors,
   });
-}
+};
 
-function validationAction(p: MachineState<Context>) {
-  if (isValid(p)) return send({ type: 'SUBMITTED' });
+const validationAction: Action<Context, FormEvent> = (
+  p: MachineState<Context>,
+  _e,
+  actions
+) => {
+  if (isValid(p)) actions.send({ type: 'SUBMITTED' });
   else
-    return send({
+    actions.send({
       type: 'REJECTED',
       errors: validator(p.context),
     } as ErrorEvent);
-}
+};
 
 const config: Record<string, State<Context, FormEvent>> = {
   init: { LOADED: 'ready' },

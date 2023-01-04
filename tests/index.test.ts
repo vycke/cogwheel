@@ -1,6 +1,13 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { machine, send, assign } from '../src';
-import { Action, MachineErrors, MachineState, Event, O } from '../src/types';
+import { machine } from '../src';
+import {
+  Action,
+  MachineErrors,
+  MachineState,
+  Event,
+  O,
+  State,
+} from '../src/types';
 import { delay } from './helpers';
 
 // Types
@@ -15,9 +22,9 @@ const configDefault = {
   red: {},
 };
 
-const countAssign: Action<Context, CountEvent> = function (p, e) {
-  if (e?.count) return assign({ count: p.context.count + e.count });
-  return assign({ count: p.context.count + 1 });
+const countAssign: Action<Context, CountEvent> = function (p, e, a) {
+  if (e?.count) return a.assign({ count: p.context.count + e.count });
+  return a.assign({ count: p.context.count + 1 });
 };
 
 type CountEvent = { type: string; count?: number };
@@ -115,15 +122,15 @@ test('General purpose action (double)', () => {
 });
 
 test('Entry actions - auto-transition', async () => {
-  const configAutomatic = {
+  const configAutomatic: Record<string, State<{}, Event>> = {
     green: { CHANGE: 'yellow' },
     yellow: {
       CHANGE: 'red',
-      _entry: [() => send({ type: 'CHANGE' })],
+      _entry: [(_p, _e, a) => a.send({ type: 'CHANGE' })],
     },
     red: {
       CHANGE: 'green',
-      _entry: [() => send({ type: 'CHANGE' }, 100)],
+      _entry: [(_p, _e, a) => a.send({ type: 'CHANGE' }, 100)],
     },
   };
 
@@ -136,9 +143,9 @@ test('Entry actions - auto-transition', async () => {
 });
 
 test('Entry actions - auto-transition on initial state', () => {
-  const configStart = {
+  const configStart: Record<string, State<{}, Event>> = {
     start: {
-      _entry: [() => send({ type: 'CHANGE' })],
+      _entry: [(_p, _e, a) => a.send({ type: 'CHANGE' })],
       CHANGE: 'end',
     },
     end: {},
@@ -172,7 +179,7 @@ test('Entry actions - update context', () => {
 test('Entry actions - update context based on transition input', () => {
   type Context = { count: number };
 
-  const configStart = {
+  const configStart: Record<string, State<Context, Event>> = {
     start: { CHANGE: 'end' },
     end: {
       _entry: [countAssign],
@@ -193,11 +200,11 @@ test('Entry actions - update context based on transition input', () => {
 test('Entry actions - multiple actions', () => {
   type Context = { count: number };
 
-  const configStart = {
+  const configStart: Record<string, State<Context, Event>> = {
     start: { CHANGE: 'middle' },
     middle: {
       CHANGE: 'end',
-      _entry: [countAssign, () => send({ type: 'CHANGE' })],
+      _entry: [countAssign, (_p, _e, a) => a.send({ type: 'CHANGE' })],
     },
     end: {},
   };
@@ -305,33 +312,6 @@ test('Guard - not allowed', () => {
   expect(service.current).toBe('green');
 });
 
-test('Actions - break after send', () => {
-  type Context = { count: number };
-
-  const configStart = {
-    start: { CHANGE: 'end' },
-    end: {
-      CHANGE: 'start',
-      _entry: [
-        countAssign,
-        countAssign,
-        () => send({ type: 'CHANGE' }),
-        countAssign,
-      ],
-    },
-  };
-
-  const service = machine<Context>({
-    init: 'start',
-    states: configStart,
-    context: { count: 0 },
-  });
-  expect(service.context.count).toBe(0);
-  service.send({ type: 'CHANGE' });
-  expect(service.current).toBe('start');
-  expect(service.context.count).toBe(2);
-});
-
 test('listener - default behaviour', () => {
   const service = machine({ init: 'green', states: configDefault });
   const remove = service.listen(cb);
@@ -350,8 +330,8 @@ test('listener - nested context maintains state', () => {
   type Context = { data: O };
   type FetchEvent = Event & { data?: unknown };
 
-  const successEntry: Action<Context, FetchEvent> = (p, e) =>
-    assign({ ...p.context, data: e.data });
+  const successEntry: Action<Context, FetchEvent> = (_p, e, a) =>
+    a.assign({ data: e.data } as Context);
   const service = machine({
     init: 'pending',
     states: {

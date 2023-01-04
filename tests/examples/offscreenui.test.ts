@@ -1,9 +1,11 @@
-import { machine, send } from '../../src';
+/* eslint-disable @typescript-eslint/ban-types */
+import { machine } from '../../src';
+import { Action, Event } from '../../src/types';
 import { delay } from '../helpers';
 
-function toggling() {
-  return send({ type: 'TOGGLE' }, 10);
-}
+const toggling: Action<{}, Event> = (_p, _e, a) => {
+  a.send({ type: 'TOGGLE' }, 10);
+};
 
 const config = {
   visible: { TOGGLE: 'closing' },

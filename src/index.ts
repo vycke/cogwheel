@@ -1,13 +1,11 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import {
   Action,
-  ActionTypes,
   Transition,
   O,
   Event,
   Machine,
   MachineConfig,
-  ActionObject,
   MachineState,
   MachineErrors,
 } from './types';
@@ -44,16 +42,6 @@ function validate<C extends O, E extends Event>(
   return valid ? undefined : MachineErrors.target;
 }
 
-// Action creator
-export function send(event: Event, delay?: number): ActionObject {
-  return { type: ActionTypes.send, payload: { event, delay } };
-}
-
-// Action creator
-export function assign<T extends O>(ctx: T): ActionObject {
-  return { type: ActionTypes.assign, payload: ctx };
-}
-
 // wrap a machine in a service
 export function machine<C extends O, E extends Event = Event>(
   config: MachineConfig<C, E>
@@ -88,24 +76,17 @@ export function machine<C extends O, E extends Event = Event>(
       return true;
     } else return transition(event);
   }
+  // Execution of context mutations
+  function assign(ctx: C): void {
+    _state.context = freeze<C>(ctx);
+  }
 
   // function to execute actions within a machine
   function execute(event: E, actions?: Action<C, E>[]): void {
     if (!actions) return;
     // Run over all actions
     for (const action of actions) {
-      const _res = action(partial(), event);
-
-      if (!_res) continue;
-      const aObj = _res as ActionObject;
-
-      if (aObj.type === ActionTypes.assign)
-        _state.context = freeze<C>(aObj.payload as C);
-      if (aObj.type === ActionTypes.send) {
-        send(aObj.payload.event as E, aObj.payload.delay as number);
-        // No other actions are executed after a send
-        break;
-      }
+      action(partial(), event, { send, assign });
     }
   }
 
@@ -130,7 +111,9 @@ export function machine<C extends O, E extends Event = Event>(
 
     // Invoke entry effects
     execute(event, config.states[_state.current]._entry);
-    _listeners.forEach((listener) => listener(partial(), event));
+    _listeners.forEach((listener) =>
+      listener(partial(), event, { send, assign })
+    );
     return true;
   }
 

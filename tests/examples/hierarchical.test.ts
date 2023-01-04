@@ -1,4 +1,5 @@
-import { assign, machine, send } from '../../src';
+/* eslint-disable @typescript-eslint/ban-types */
+import { machine } from '../../src';
 import { MachineState, State, Event, Action } from '../../src/types';
 
 type O = Record<string, unknown>;
@@ -20,19 +21,19 @@ const innerConfig: Record<string, State<N, Event>> = {
 };
 
 const nestedTransitionAction: NestedAction<N> = (config, init) => {
-  return function (state, event) {
+  return function (state, event, actions) {
     const _machine = machine({
       states: config,
       init: state.context.current || init,
     });
     _machine.send(event);
-    return assign({ current: _machine.current });
+    actions.assign({ ...state.context, current: _machine.current });
   };
 };
 
 const nestedExitTransition: NestedTransition = function (exit, transition) {
-  return function (state) {
-    if (state.context.current === exit) return send({ type: transition });
+  return function (state, _e, actions) {
+    if (state.context.current === exit) actions.send({ type: transition });
   };
 };
 

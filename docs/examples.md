@@ -55,10 +55,8 @@ machine.send({ type: 'MODIFIED', key: 'test', value: 'test' });
 Think of modals, sidebars, etc. that you want to appear/dissappear on the screen. This state machine takes into account that the element might have a transition state in which animations etc. happen.
 
 ```js
-import { send } from 'cogwheel';
-
 // ACTIONS
-const toggling = (state) => send({ type: 'TOGGLE' }, 10);
+const toggling = (_s, _e, c) => c.send({ type: 'TOGGLE' }, 10);
 
 // CONFIG
 const config = {
@@ -79,8 +77,6 @@ const config = {
 Toast messages are a special kind of offscreen UI element. Once appeared, they will automatically disappear, unless they are triggered again. Manual closing of the toast message should also be possible. The context of the machine Note that this machine does not have transitional states for animation purposes.
 
 ```js
-import { assign, send } from 'cogwheel';
-
 // CONFIG
 const config = {
   init: 'invisible',
@@ -89,8 +85,8 @@ const config = {
       CLOSED: 'invisible',
       OPENED: 'visible',
       _entry: [
-        (state, { label }) => assign({ ...state.context, label }),
-        (state) => send({ type: 'CLOSED' }, 6000),
+        (state, { label }, c) => c.assign({ ...state.context, label }),
+        (_s, _e, c) => c.send({ type: 'CLOSED' }, 6000),
       ],
     },
     invisible: { OPENED: 'visible' },
@@ -106,8 +102,6 @@ machine.send({ type: 'OPENED', label: 'my toast message' });
 ![](./img/form.png)
 
 ```js
-import { send, assign } from 'cogwheel';
-
 // ACTIONS
 function validator(ctx) {
   if (ctx.values.key === 'test') return {};
@@ -120,16 +114,16 @@ function isValid(ctx) {
   return false;
 }
 
-function updateEntry(state, { key, value }) {
+function updateEntry(state, { key, value }, cb) {
   const _ctx = { ...state.context };
   _ctx.values[key] = value;
   _ctx.errors[key] = '';
-  return assign(_ctx);
+  cb.assign(_ctx);
 }
 
-function validationAction(state) {
-  if (isValid(state.context)) return send({ type: 'SUBMITTED' });
-  else return send('REJECTED', validator(state.context));
+function validationAction(state, _e, cb) {
+  if (isValid(state.context)) cb.send({ type: 'SUBMITTED' });
+  else cb.send('REJECTED', validator(state.context));
 }
 
 // CONFIG
@@ -203,7 +197,7 @@ const config = {
     authenticated: {
       SIGNOUT_STARTED: 'signing_out',
       EXPIRED: 'expired',
-      _entry: () => send({ type: 'EXPIRED' }, 90000),
+      _entry: (_s, _e, cb) => cb.send({ type: 'EXPIRED' }, 90000),
     },
     expired: { REFRESH_STARTED: 'refreshing' },
     signing_out: { FINISHED: 'not_authenticated' },
