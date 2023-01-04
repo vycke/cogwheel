@@ -13,10 +13,15 @@ type Listen<C extends O, E extends Event> = (
   listener: Action<C, E>
 ) => () => void;
 
+export type Callbacks<C extends O, E extends Event> = {
+  send: Send<E>;
+  assign: Assign<C>;
+};
+
 export type Action<C extends O, E extends Event> = (
   partial: MachineState<C>,
   event: E,
-  actions: { send: Send<E>; assign: Assign<C> }
+  callbacks: Callbacks<C, E>
 ) => void;
 
 export type Guard<C extends O> = (state: MachineState<C>) => boolean;

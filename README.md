@@ -6,8 +6,6 @@
 [![Minified size](https://img.shields.io/bundlephobia/min/cogwheel?label=minified)](https://www.npmjs.com/package/cogwheel)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **NOTE**: this package is still in development. Its API changes and might break with NPM updates.
-
 Simple finite state machines that can be used for state/process management.
 
 ## Principles
