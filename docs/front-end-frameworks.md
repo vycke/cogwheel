@@ -46,7 +46,8 @@ export function machineStore<T extends O, E extends Event = Event>(
   const machine = fsm(config);
   const { current, id, context } = machine;
   const state = readable({ current, id, context }, (set) => {
-    return machine.listen(({ current, context }) => {
+    return machine.listen(({ state }) => {
+      const { context, current } = state;
       set({ context, current, id });
     });
   });

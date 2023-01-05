@@ -7,10 +7,10 @@ type Context = { label: string };
 type MachineEvent = Event;
 let service: Machine<Context, MachineEvent>;
 
-const pendingEntryAction: Action<Context, Event> = async (_p, _e, a) => {
+const pendingEntryAction: Action<Context, Event> = async ({ send, assign }) => {
   await delay(50);
-  a.assign({ label: 'test' });
-  a.send({ type: 'FINISHED' });
+  assign({ label: 'test' });
+  send({ type: 'FINISHED' });
 };
 
 const config: Record<string, State<Context, MachineEvent>> = {

@@ -6,14 +6,21 @@ import { delay } from '../helpers';
 type Context = { label: string };
 type ToastEvent = Event & { label?: string };
 
-const valueAssign: Action<Context, ToastEvent> = (p, e, a) =>
-  a.assign({ ...p.context, label: e.label || '' });
+const visibleAction: Action<Context, ToastEvent> = ({
+  state,
+  event,
+  assign,
+  send,
+}) => {
+  assign({ ...state.context, label: event.label || '' });
+  send({ type: 'CLOSED' }, 10);
+};
 
 const config: Record<string, State<Context, ToastEvent>> = {
   visible: {
     CLOSED: 'invisible',
     OPENED: 'visible',
-    _entry: [valueAssign, (_p, _e, a) => a.send({ type: 'CLOSED' }, 10)],
+    _entry: [visibleAction],
   },
   invisible: { OPENED: 'visible' },
 };
@@ -37,7 +44,7 @@ test('Toast - auto close-toast', async () => {
   expect(service.current).toBe('invisible');
   service.send({ type: 'OPENED', label: 'message' });
   expect(service.current).toBe('visible');
-  await delay(100);
+  await delay(50);
   expect(service.current).toBe('invisible');
 });
 

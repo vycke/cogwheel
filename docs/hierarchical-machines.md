@@ -6,13 +6,13 @@ Cogwheel does not support hierarchical machines by default. However, the API is 
 
 ```js
 function nestedTransitionAction(config, init) {
-  return function (state, event) {
+  return function ({ state, even, assign }) {
     const _machine = machine({
       states: config,
       init: state.context.current || init,
     });
     _machine.send(event);
-    return assign({ current: _machine.current });
+    assign({ current: _machine.current });
   };
 }
 ```
@@ -21,8 +21,8 @@ function nestedTransitionAction(config, init) {
 
 ```js
 function nestedExitTransition(exit, transition) {
-  return function (state) {
-    if (state.context.current === exit) return send({ type: transition });
+  return function ({ state, send }) {
+    if (state.context.current === exit) send({ type: transition });
   };
 }
 ```

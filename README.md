@@ -28,3 +28,12 @@ Cogwheel is build around the following principles around state machines, and the
 ## [Front-end framework implementation](./docs/front-end-frameworks.md)
 
 ## [State machine examples](./docs/examples.md)
+
+## Migration v3.x.x > v4.x.x
+
+- Remove all `import { send, assign } from 'cogwheel';`;
+- Replace input parameters of all actions
+
+```js
+const exampleAction({ state, event, assign, send }) {}
+```

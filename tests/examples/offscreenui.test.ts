@@ -3,8 +3,8 @@ import { machine } from '../../src';
 import { Action, Event } from '../../src/types';
 import { delay } from '../helpers';
 
-const toggling: Action<{}, Event> = (_p, _e, a) => {
-  a.send({ type: 'TOGGLE' }, 10);
+const toggling: Action<{}, Event> = ({ send }) => {
+  send({ type: 'TOGGLE' }, 10);
 };
 
 const config = {
