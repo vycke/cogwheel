@@ -21,19 +21,19 @@ const innerConfig: Record<string, State<N, Event>> = {
 };
 
 const nestedTransitionAction: NestedAction<N> = (config, init) => {
-  return function (state, event, actions) {
+  return function ({ state, event, assign }) {
     const _machine = machine({
       states: config,
       init: state.context.current || init,
     });
     _machine.send(event);
-    actions.assign({ ...state.context, current: _machine.current });
+    assign({ ...state.context, current: _machine.current });
   };
 };
 
 const nestedExitTransition: NestedTransition = function (exit, transition) {
-  return function (state, _e, actions) {
-    if (state.context.current === exit) actions.send({ type: transition });
+  return function ({ state, send }) {
+    if (state.context.current === exit) send({ type: transition });
   };
 };
 
@@ -50,7 +50,7 @@ const outerConfig: Record<string, State<Context, Event>> = {
   red: { GO: 'green' },
 };
 
-test('Hierarchical', () => {
+test('Hierarchical state machines', () => {
   const service = machine({ init: 'red', states: outerConfig });
   service.send({ type: 'GO' });
   expect(service.current).toBe('green');

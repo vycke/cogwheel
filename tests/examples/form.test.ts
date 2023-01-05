@@ -24,47 +24,31 @@ function isValid(s: MachineState<Context>) {
   return false;
 }
 
-const updateAction: Action<Context, FormEvent> = (
-  p: MachineState<Context>,
-  e: FormEvent,
-  actions
-) => {
-  const _ctx = { ...p.context };
-  const _e = e as ModifierEvent;
+const updateAction: Action<Context, FormEvent> = ({ state, event, assign }) => {
+  const _ctx = { ...state.context };
+  const _e = event as ModifierEvent;
   _ctx.values[_e.key] = _e.value;
   _ctx.errors[_e.key] = '';
-  actions.assign(_ctx);
+  assign(_ctx);
 };
 
-const initAction: Action<Context, FormEvent> = (
-  _p: MachineState<Context>,
-  e: FormEvent,
-  actions
-) => {
-  actions.assign({ values: (e as InitEvent).values, errors: {} });
+const initAction: Action<Context, FormEvent> = ({ event, assign }) => {
+  assign({ values: (event as InitEvent).values, errors: {} });
 };
 
-const errorAction: Action<Context, FormEvent> = (
-  p: MachineState<Context>,
-  e: FormEvent,
-  actions
-) => {
-  actions.assign({
-    ...p.context,
-    errors: (e as ErrorEvent).errors,
+const errorAction: Action<Context, FormEvent> = ({ event, state, assign }) => {
+  assign({
+    ...state.context,
+    errors: (event as ErrorEvent).errors,
   });
 };
 
-const validationAction: Action<Context, FormEvent> = (
-  p: MachineState<Context>,
-  _e,
-  actions
-) => {
-  if (isValid(p)) actions.send({ type: 'SUBMITTED' });
+const validationAction: Action<Context, FormEvent> = ({ state, send }) => {
+  if (isValid(state)) send({ type: 'SUBMITTED' });
   else
-    actions.send({
+    send({
       type: 'REJECTED',
-      errors: validator(p.context),
+      errors: validator(state.context),
     } as ErrorEvent);
 };
 

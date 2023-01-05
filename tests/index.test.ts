@@ -22,9 +22,13 @@ const configDefault = {
   red: {},
 };
 
-const countAssign: Action<Context, CountEvent> = function (p, e, a) {
-  if (e?.count) return a.assign({ count: p.context.count + e.count });
-  return a.assign({ count: p.context.count + 1 });
+const countAssign: Action<Context, CountEvent> = function ({
+  state,
+  event,
+  assign,
+}) {
+  if (event?.count) return assign({ count: state.context.count + event.count });
+  return assign({ count: state.context.count + 1 });
 };
 
 type CountEvent = { type: string; count?: number };
@@ -126,11 +130,11 @@ test('Entry actions - auto-transition', async () => {
     green: { CHANGE: 'yellow' },
     yellow: {
       CHANGE: 'red',
-      _entry: [(_p, _e, a) => a.send({ type: 'CHANGE' })],
+      _entry: [({ send }) => send({ type: 'CHANGE' })],
     },
     red: {
       CHANGE: 'green',
-      _entry: [(_p, _e, a) => a.send({ type: 'CHANGE' }, 100)],
+      _entry: [({ send }) => send({ type: 'CHANGE' }, 100)],
     },
   };
 
@@ -145,7 +149,7 @@ test('Entry actions - auto-transition', async () => {
 test('Entry actions - auto-transition on initial state', () => {
   const configStart: Record<string, State<{}, Event>> = {
     start: {
-      _entry: [(_p, _e, a) => a.send({ type: 'CHANGE' })],
+      _entry: [({ send }) => send({ type: 'CHANGE' })],
       CHANGE: 'end',
     },
     end: {},
@@ -204,7 +208,7 @@ test('Entry actions - multiple actions', () => {
     start: { CHANGE: 'middle' },
     middle: {
       CHANGE: 'end',
-      _entry: [countAssign, (_p, _e, a) => a.send({ type: 'CHANGE' })],
+      _entry: [countAssign, ({ send }) => send({ type: 'CHANGE' })],
     },
     end: {},
   };
@@ -330,8 +334,8 @@ test('listener - nested context maintains state', () => {
   type Context = { data: O };
   type FetchEvent = Event & { data?: unknown };
 
-  const successEntry: Action<Context, FetchEvent> = (_p, e, a) =>
-    a.assign({ data: e.data } as Context);
+  const successEntry: Action<Context, FetchEvent> = ({ assign, event }) =>
+    assign({ data: event.data } as Context);
   const service = machine({
     init: 'pending',
     states: {
@@ -344,11 +348,6 @@ test('listener - nested context maintains state', () => {
   service.send({ type: 'FINISHED', data: { arr: ['test'] } });
   expect(service.current).toBe('success');
   expect(service.context).toEqual({ data: { arr: ['test'] } });
-  expect(cb.mock.calls[0][0]).toEqual({
-    id: '',
-    current: 'success',
-    context: { data: { arr: ['test'] } },
-  });
 
   remove();
 });

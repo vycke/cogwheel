@@ -8,20 +8,21 @@ This state machine allows you to maintain the state of a single fetch operation 
 
 ```js
 // ACTIONS
-const successEntry = (state, { data }) =>
-  assign({ ...state.context, data, errors: null, valid: true });
+const successEntry = ({ state, event, assign }) =>
+  assign({ ...state.context, data: event.data, errors: null, valid: true });
 
-const errorEntry = (state, { errors }) =>
-  assign({ ...state, context, errors, data: null, valid: false });
+const errorEntry = ({ state, event, assign }) =>
+  assign({ ...state, context, errors: event.errors, data: null, valid: false });
 
-const pendingEntry = (state) => assign({ ...state.context, errors: null });
+const pendingEntry = ({ state, assign }) =>
+  assign({ ...state.context, errors: null });
 
-const invalidEntry = (state, { key, value }) =>
+const invalidEntry = ({ state, event, assign }) =>
   assign({
     ...state.context,
     data: {
       ...state.context.data,
-      [key]: value,
+      [event.key]: event.value,
     },
     valid: false,
   });
@@ -56,7 +57,7 @@ Think of modals, sidebars, etc. that you want to appear/dissappear on the screen
 
 ```js
 // ACTIONS
-const toggling = (_s, _e, c) => c.send({ type: 'TOGGLE' }, 10);
+const toggling = ({ send }) => send({ type: 'TOGGLE' }, 10);
 
 // CONFIG
 const config = {
@@ -85,8 +86,9 @@ const config = {
       CLOSED: 'invisible',
       OPENED: 'visible',
       _entry: [
-        (state, { label }, c) => c.assign({ ...state.context, label }),
-        (_s, _e, c) => c.send({ type: 'CLOSED' }, 6000),
+        ({ state, event, assign }) =>
+          assign({ ...state.context, label: event.label }),
+        ({ send }) => send({ type: 'CLOSED' }, 6000),
       ],
     },
     invisible: { OPENED: 'visible' },
@@ -114,16 +116,16 @@ function isValid(ctx) {
   return false;
 }
 
-function updateEntry(state, { key, value }, cb) {
+function updateEntry({ state, event, assign }) {
   const _ctx = { ...state.context };
-  _ctx.values[key] = value;
-  _ctx.errors[key] = '';
-  cb.assign(_ctx);
+  _ctx.values[event.key] = event.value;
+  _ctx.errors[event.key] = '';
+  assign(_ctx);
 }
 
-function validationAction(state, _e, cb) {
-  if (isValid(state.context)) cb.send({ type: 'SUBMITTED' });
-  else cb.send('REJECTED', validator(state.context));
+function validationAction({ state, send }) {
+  if (isValid(state.context)) send({ type: 'SUBMITTED' });
+  else send('REJECTED', validator(state.context));
 }
 
 // CONFIG
@@ -133,7 +135,7 @@ const config = {
     init: { LOADED: 'ready' },
     ready: {
       CHANGED: 'touched',
-      _entry: [(_s, { values }) => assign({ values, errors: null })],
+      _entry: [({ event }) => assign({ values: event.values, errors: null })],
     },
     touched: {
       CHANGED: 'touched',
@@ -147,7 +149,10 @@ const config = {
     },
     invalid: {
       CHANGED: 'touched',
-      _entry: [(s, { errors }) => assign({ ...s.context, errors })],
+      _entry: [
+        ({ state, event, assign }) =>
+          assign({ ...state.context, errors: event.errors }),
+      ],
     },
     submitting: { FINISHED: 'ready' },
   },
@@ -197,7 +202,7 @@ const config = {
     authenticated: {
       SIGNOUT_STARTED: 'signing_out',
       EXPIRED: 'expired',
-      _entry: (_s, _e, cb) => cb.send({ type: 'EXPIRED' }, 90000),
+      _entry: ({ send }) => send({ type: 'EXPIRED' }, 90000),
     },
     expired: { REFRESH_STARTED: 'refreshing' },
     signing_out: { FINISHED: 'not_authenticated' },

@@ -7,30 +7,34 @@ type FetchEvent = Event & { data?: unknown; errors?: unknown };
 type ModifierEvent = Event & { key: string; value: unknown };
 type MachineEvent = Event | ModifierEvent | FetchEvent;
 
-const successEntry: Action<Context, FetchEvent> = (p, e, a) =>
-  a.assign({
-    ...p.context,
-    data: e.data,
+const successEntry: Action<Context, FetchEvent> = ({ state, event, assign }) =>
+  assign({
+    ...state.context,
+    data: event.data,
     errors: null,
     valid: true,
   } as Context);
-const errorEntry: Action<Context, FetchEvent> = (p, e, a) =>
-  a.assign({
-    ...p.context,
-    errors: e.errors,
+const errorEntry: Action<Context, FetchEvent> = ({ state, event, assign }) =>
+  assign({
+    ...state.context,
+    errors: event.errors,
     data: null,
     valid: false,
   } as Context);
 
-const pendingEntry: Action<Context, FetchEvent> = (p, _e, a) =>
-  a.assign({ ...p.context, errors: null });
+const pendingEntry: Action<Context, FetchEvent> = ({ state, assign }) =>
+  assign({ ...state.context, errors: null });
 
-const invalidEntry: Action<Context, MachineEvent> = (p, e, a) => {
-  const _e = e as ModifierEvent;
-  a.assign({
-    ...p.context,
+const invalidEntry: Action<Context, MachineEvent> = ({
+  state,
+  event,
+  assign,
+}) => {
+  const _e = event as ModifierEvent;
+  assign({
+    ...state.context,
     data: {
-      ...p.context.data,
+      ...state.context.data,
       [_e.key]: _e.value,
     },
     valid: false,

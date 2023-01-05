@@ -86,7 +86,7 @@ export function machine<C extends O, E extends Event = Event>(
     if (!actions) return;
     // Run over all actions
     for (const action of actions) {
-      action(partial(), event, { send, assign });
+      action({ state: partial(), event, send, assign });
     }
   }
 
@@ -112,7 +112,7 @@ export function machine<C extends O, E extends Event = Event>(
     // Invoke entry effects
     execute(event, config.states[_state.current]._entry);
     _listeners.forEach((listener) =>
-      listener(partial(), event, { send, assign })
+      listener({ state: partial(), event, send, assign })
     );
     return true;
   }

@@ -6,7 +6,7 @@ You are able to define 'actions'. These actions are executed when you leave a st
 import type { MachineState, Callbacks, Event } from 'cogwheel/types';
 // MachineState = { current, id, context };
 type Ctx = {};
-const action = (state: MachineState<Ctx>, event: Event, callbacks: Callbacks<Ctx, Event>) => { ... }
+const action = ({ state: MachineState<Ctx>, event: Event, send: Send<Event>, assign: Assign<Ctx> }) => { ... }
 ```
 
 > NOTE: `_entry` and `_exit` are reserved transition names to provide for a simplified API.
@@ -19,7 +19,7 @@ const config = {
       CHANGE: {
         target: 'red',
         actions: [
-          (state) => {
+          ({ state }) => {
             console.log(state);
           },
         ],
@@ -27,15 +27,15 @@ const config = {
     },
     red: {
       _entry: [
-        (state, event) => {
+        ({ state, event }) => {
           console.log(state, event);
         },
       ],
       _exit: [
-        (state, event) => {
+        ({ state, event }) => {
           console.log(state, event);
         },
-        (state) => {
+        ({ state }) => {
           console.log(state);
         },
       ],
@@ -59,7 +59,7 @@ const config = {
     green: { CHANGE: 'red' },
     red: {
       CHANGE: 'green',
-      _entry: [(_p, _e, c) => c.send({ type: 'CHANGE' }, 3000)],
+      _entry: [({ send }) => send({ type: 'CHANGE' }, 3000)],
     },
   },
 };
@@ -76,13 +76,15 @@ const config = {
     green: { CHANGE: 'yellow' },
     yellow: {
       CHANGE: 'red',
-      _entry: [(state, _e, c) => c.assign({ count: state.context.count + 1 })],
+      _entry: [
+        ({ state, assign }) => assign({ count: state.context.count + 1 }),
+      ],
     },
     yellow: {
       CHANGE: 'green',
       _entry: [
-        (state, _e, c) =>
-          c.assign({ count: state.context.count + event.count }),
+        ({ state, assign }) =>
+          assign({ count: state.context.count + event.count }),
       ],
     },
   },
@@ -97,7 +99,7 @@ machine.send({ type: 'CHANGE', count: 2 });
 Listeners are special actions that trigger on each successful transition of the machine. You can have multiple listeners on the machine.
 
 ```js
-function listener(state) {
+function listener({ state }) {
   console.log(state);
 }
 

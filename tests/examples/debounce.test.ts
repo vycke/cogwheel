@@ -8,7 +8,7 @@ const config: Record<string, State<{}, Event>> = {
   debouncing: {
     GO: 'executing',
     CHANGED: 'debouncing',
-    _entry: [(_p, _e, a) => a.send({ type: 'GO' }, 10)],
+    _entry: [({ send }) => send({ type: 'GO' }, 10)],
   },
   executing: { FINISHED: 'init' },
 };
