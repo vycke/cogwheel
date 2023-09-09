@@ -8,21 +8,21 @@ import {
   MachineConfig,
   MachineState,
   MachineErrors,
-} from './types';
+} from "./types";
 
 // deep-freeze for immutability
 function freeze<T extends O>(obj: T): T {
   if (Object.isFrozen(obj)) return obj;
   Object.freeze(obj);
   Object.keys(obj).forEach((prop: string) => {
-    if (typeof obj[prop] !== 'object' || Object.isFrozen(obj[prop])) return;
+    if (typeof obj[prop] !== "object" || Object.isFrozen(obj[prop])) return;
     freeze(obj[prop] as O);
   });
   return obj;
 }
 
 function validate<C extends O, E extends Event>(
-  config: MachineConfig<C, E>
+  config: MachineConfig<C, E>,
 ): MachineErrors | undefined {
   if (!config.states[config.init]) return MachineErrors.init;
 
@@ -30,10 +30,10 @@ function validate<C extends O, E extends Event>(
   const states = Object.keys(config.states);
   states.forEach((state) => {
     Object.entries(config.states[state]).forEach(([key, value]) => {
-      if (['_exit', '_entry'].includes(key)) return;
+      if (["_exit", "_entry"].includes(key)) return;
 
       const target =
-        typeof value === 'string' ? value : (value as Transition<C, E>).target;
+        typeof value === "string" ? value : (value as Transition<C, E>).target;
 
       if (!states.includes(target)) valid = false;
     });
@@ -44,7 +44,7 @@ function validate<C extends O, E extends Event>(
 
 // wrap a machine in a service
 export function machine<C extends O, E extends Event = Event>(
-  config: MachineConfig<C, E>
+  config: MachineConfig<C, E>,
 ): Machine<C, E> {
   // Throw error if configuration is invalid
   const isInvalid = validate(config);
@@ -52,7 +52,7 @@ export function machine<C extends O, E extends Event = Event>(
   let _timeout: ReturnType<typeof setTimeout>;
   const _listeners: Action<C, E>[] = [];
   const _state: Machine<C, E> = {
-    id: config.id || '',
+    id: config.id || "",
     current: config.init,
     send,
     context: freeze(config.context || ({} as C)),
@@ -95,7 +95,7 @@ export function machine<C extends O, E extends Event = Event>(
     let target, guard, actions;
     const transition = config.states[_state.current][event.type];
     if (!transition) return false;
-    if (typeof transition === 'string') target = transition;
+    if (typeof transition === "string") target = transition;
     else ({ target, guard, actions } = transition as Transition<C, E>);
 
     // guard holds result
@@ -112,12 +112,12 @@ export function machine<C extends O, E extends Event = Event>(
     // Invoke entry effects
     execute(event, config.states[_state.current]._entry);
     _listeners.forEach((listener) =>
-      listener({ state: partial(), event, send, assign })
+      listener({ state: partial(), event, send, assign }),
     );
     return true;
   }
 
   // Invoke entry if existing on the initial state
-  execute({ type: '__init__' } as E, config.states[config.init]._entry);
+  execute({ type: "__init__" } as E, config.states[config.init]._entry);
   return new Proxy(_state, { set: () => true });
 }

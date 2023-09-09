@@ -11,9 +11,9 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 18
       - run: yarn
-      - run: yarn test
+      - run: yarn validate
 
   publish-npm:
     needs: test
@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 18
           registry-url: https://registry.npmjs.org/
       - name: yarn publish
         run: |

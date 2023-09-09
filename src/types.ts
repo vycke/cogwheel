@@ -10,7 +10,7 @@ export type Event = {
 type Send<E extends Event> = (event: E, delay?: number) => boolean;
 type Assign<C extends O> = (ctx: C) => void;
 type Listen<C extends O, E extends Event> = (
-  listener: Action<C, E>
+  listener: Action<C, E>,
 ) => () => void;
 
 export type ActionInput<C extends O, E extends Event> = {
@@ -21,7 +21,7 @@ export type ActionInput<C extends O, E extends Event> = {
 };
 
 export type Action<C extends O, E extends Event> = (
-  input: ActionInput<C, E>
+  input: ActionInput<C, E>,
 ) => void;
 
 export type Guard<C extends O> = (state: MachineState<C>) => boolean;
@@ -57,6 +57,6 @@ export type Machine<C extends O, E extends Event> = MachineState<C> & {
 };
 
 export enum MachineErrors {
-  init = 'invalid initial state',
-  target = 'non-existing transition target',
+  init = "invalid initial state",
+  target = "non-existing transition target",
 }
