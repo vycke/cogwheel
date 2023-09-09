@@ -2,12 +2,9 @@
   "name": "cogwheel",
   "version": "4.2.0",
   "description": "Simple state machine",
-  "main": "dist/index.js",
-  "module": "dist/esm/index.js",
+  "type": "module",
+  "exports": "./dist",
   "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest watch",
