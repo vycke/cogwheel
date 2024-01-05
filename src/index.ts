@@ -6,8 +6,12 @@ import {
   Machine,
   MachineConfig,
   MachineState,
-  MachineErrors,
 } from "./types";
+
+const MachineErrors = {
+  init: "invalid initial state",
+  target: "non-existing transition target",
+};
 
 // deep-freeze for immutability
 function freeze<T extends object>(obj: T): T {
@@ -22,7 +26,7 @@ function freeze<T extends object>(obj: T): T {
 
 function validate<C extends object, E extends Event>(
   config: MachineConfig<C, E>,
-): MachineErrors | undefined {
+): string | undefined {
   if (!config.states[config.init]) return MachineErrors.init;
 
   let valid = true;

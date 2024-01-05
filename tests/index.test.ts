@@ -6,7 +6,6 @@ import {
   MachineErrors,
   MachineState,
   Event,
-  O,
   State,
 } from "../src/types";
 import { delay } from "./helpers";

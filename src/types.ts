@@ -51,8 +51,3 @@ export type Machine<C extends object, E extends Event> = MachineState<C> & {
   send: Send<E>;
   listen: Listen<C, E>;
 };
-
-export enum MachineErrors {
-  init = "invalid initial state",
-  target = "non-existing transition target",
-}
