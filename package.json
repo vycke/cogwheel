@@ -1,6 +1,6 @@
 {
   "name": "cogwheel",
-  "version": "4.2.0",
+  "version": "4.2.1",
   "description": "Simple state machine",
   "type": "module",
   "exports": "./dist",

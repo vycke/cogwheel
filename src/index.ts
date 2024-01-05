@@ -2,7 +2,6 @@
 import {
   Action,
   Transition,
-  O,
   Event,
   Machine,
   MachineConfig,
@@ -11,17 +10,17 @@ import {
 } from "./types";
 
 // deep-freeze for immutability
-function freeze<T extends O>(obj: T): T {
+function freeze<T extends object>(obj: T): T {
   if (Object.isFrozen(obj)) return obj;
   Object.freeze(obj);
   Object.keys(obj).forEach((prop: string) => {
     if (typeof obj[prop] !== "object" || Object.isFrozen(obj[prop])) return;
-    freeze(obj[prop] as O);
+    freeze(obj[prop] as object);
   });
   return obj;
 }
 
-function validate<C extends O, E extends Event>(
+function validate<C extends object, E extends Event>(
   config: MachineConfig<C, E>,
 ): MachineErrors | undefined {
   if (!config.states[config.init]) return MachineErrors.init;
@@ -43,7 +42,7 @@ function validate<C extends O, E extends Event>(
 }
 
 // wrap a machine in a service
-export function machine<C extends O, E extends Event = Event>(
+export function machine<C extends object, E extends Event = Event>(
   config: MachineConfig<C, E>,
 ): Machine<C, E> {
   // Throw error if configuration is invalid
