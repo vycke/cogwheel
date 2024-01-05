@@ -1,10 +1,13 @@
 {
   "name": "cogwheel",
-  "version": "4.2.1",
+  "version": "4.2.2",
   "description": "Simple state machine",
-  "type": "module",
-  "exports": "./dist",
+  "main": "dist/index.js",
+  "module": "dist/esm/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -17,19 +20,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/crinklesio/cogwheel.git"
+    "url": "git+https://github.com/kevtiq/cogwheel.git"
   },
   "keywords": [
     "fsm",
     "state machine",
     "finite state machine"
   ],
-  "author": "Kevin Pennekamp <github@crinkles.io>",
+  "author": "Kevin Pennekamp <github@crinkles.dev>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/crinklesio/cogwheel/issues"
+    "url": "https://github.com/kevtiq/cogwheel/issues"
   },
-  "homepage": "https://github.com/crinklesio/cogwheel#readme",
+  "homepage": "https://github.com/kevtiq/cogwheel#readme",
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.8.1",
     "@typescript-eslint/parser": "^5.8.1",

@@ -5,7 +5,7 @@
     "lib": ["esnext"],
     "target": "esnext",
     "declaration": true,
-    "outDir": "dist",
+    "outDir": "dist/esm",
     "rootDir": "src",
     "strict": true,
     "noImplicitAny": false,
