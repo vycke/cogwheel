@@ -8,7 +8,7 @@ import {
   MachineState,
 } from "./types";
 
-const MachineErrors = {
+export const MachineErrors = {
   init: "invalid initial state",
   target: "non-existing transition target",
 };

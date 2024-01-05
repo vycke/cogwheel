@@ -1,13 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { test, expect, beforeEach, vi } from "vitest";
-import { machine } from "../src";
-import {
-  Action,
-  MachineErrors,
-  MachineState,
-  Event,
-  State,
-} from "../src/types";
+import { machine, MachineErrors } from "../src";
+import { Action, MachineState, Event, State } from "../src/types";
 import { delay } from "./helpers";
 
 // Types
