@@ -1,6 +1,6 @@
 {
   "name": "cogwheel",
-  "version": "4.2.5",
+  "version": "4.2.6",
   "description": "Simple state machine",
   "main": "dist/index.js",
   "module": "dist/index.js",
