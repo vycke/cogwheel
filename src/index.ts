@@ -8,7 +8,7 @@ export type Event = {
 type Send<E extends Event> = (event: E, delay?: number) => boolean;
 type Assign<C extends object> = (ctx: C) => void;
 type Listen<C extends object, E extends Event> = (
-  listener: Action<C, E>,
+  listener: Action<C, E>
 ) => () => void;
 
 export type ActionInput<C extends object, E extends Event> = {
@@ -19,7 +19,7 @@ export type ActionInput<C extends object, E extends Event> = {
 };
 
 export type Action<C extends object, E extends Event> = (
-  input: ActionInput<C, E>,
+  input: ActionInput<C, E>
 ) => void;
 
 export type Guard<C extends object> = (state: MachineState<C>) => boolean;
@@ -57,7 +57,7 @@ export type Machine<C extends object, E extends Event> = MachineState<C> & {
 /**
  * Constants
  */
-export const MachineErrors = {
+const MachineErrors = {
   init: "invalid initial state",
   target: "non-existing transition target",
 };
@@ -78,7 +78,7 @@ function freeze<T extends object>(obj: T): T {
 }
 
 function validate<C extends object, E extends Event>(
-  config: MachineConfig<C, E>,
+  config: MachineConfig<C, E>
 ): string | undefined {
   if (!config.states[config.init]) return MachineErrors.init;
 
@@ -99,8 +99,8 @@ function validate<C extends object, E extends Event>(
 }
 
 // wrap a machine in a service
-export function machine<C extends object, E extends Event = Event>(
-  config: MachineConfig<C, E>,
+function machine<C extends object, E extends Event = Event>(
+  config: MachineConfig<C, E>
 ): Machine<C, E> {
   // Throw error if configuration is invalid
   const isInvalid = validate(config);
@@ -168,7 +168,7 @@ export function machine<C extends object, E extends Event = Event>(
     // Invoke entry effects
     execute(event, config.states[_state.current]._entry);
     _listeners.forEach((listener) =>
-      listener({ state: partial(), event, send, assign }),
+      listener({ state: partial(), event, send, assign })
     );
     return true;
   }
@@ -177,3 +177,7 @@ export function machine<C extends object, E extends Event = Event>(
   execute({ type: "__init__" } as E, config.states[config.init]._entry);
   return new Proxy(_state, { set: () => true });
 }
+
+module.exports = {
+  machine,
+};
