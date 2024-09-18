@@ -4,12 +4,13 @@
   "compilerOptions": {
     "lib": ["esnext", "dom"],
     "target": "esnext",
-    "outDir": "./dist/esm",
+    "outDir": "./dist",
     "rootDir": "./src",
     "declaration": true,
     "strict": true,
     "noImplicitAny": false,
     "esModuleInterop": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "module": "CommonJS"
   }
 }
