@@ -4,7 +4,7 @@
   "compilerOptions": {
     "lib": ["esnext"],
     "target": "esnext",
-    "outDir": "./dist",
+    "outDir": "./dist/esm",
     "rootDir": "./src",
     "declaration": true,
     "strict": true,
