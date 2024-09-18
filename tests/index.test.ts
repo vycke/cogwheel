@@ -76,7 +76,7 @@ test("immutability", () => {
 
 test("Incorrect initial state", () => {
   expect(() =>
-    machine({ init: "WrongInitialState", states: configDefault })
+    machine({ init: "WrongInitialState", states: configDefault }),
   ).toThrow("invalid initial state");
 });
 
@@ -88,7 +88,7 @@ test("Non-existing target in configuration", () => {
   };
 
   expect(() => machine({ init: "green", states: config })).toThrow(
-    "non-existing transition target"
+    "non-existing transition target",
   );
 });
 
@@ -324,7 +324,7 @@ test("listener - default behaviour", () => {
 // listeners. Accessing the context directly does not provide this issue
 // This tests validates that this does not happen anymore
 test("listener - nested context maintains state", () => {
-  type Context = { data: O };
+  type Context = { data: object };
   type FetchEvent = Event & { data?: unknown };
 
   const successEntry: Action<Context, FetchEvent> = ({ assign, event }) =>
