@@ -1,13 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { test, expect, beforeEach, vi } from "vitest";
-import {
-  machine,
-  MachineErrors,
-  Action,
-  MachineState,
-  Event,
-  State,
-} from "../src";
+import { machine, Action, MachineState, Event, State } from "../src";
 import { delay } from "./helpers";
 
 // Types
@@ -83,8 +76,8 @@ test("immutability", () => {
 
 test("Incorrect initial state", () => {
   expect(() =>
-    machine({ init: "WrongInitialState", states: configDefault }),
-  ).toThrow(MachineErrors.init);
+    machine({ init: "WrongInitialState", states: configDefault })
+  ).toThrow("invalid initial state");
 });
 
 test("Non-existing target in configuration", () => {
@@ -95,7 +88,7 @@ test("Non-existing target in configuration", () => {
   };
 
   expect(() => machine({ init: "green", states: config })).toThrow(
-    MachineErrors.target,
+    "non-existing transition target"
   );
 });
 
