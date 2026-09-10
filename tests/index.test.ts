@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import { test, expect, beforeEach, vi } from "vitest";
 import { machine, Action, MachineState, Event, State } from "../src";
 import { delay } from "./helpers";

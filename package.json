@@ -10,12 +10,12 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest watch",
-    "build": "npm run clean && tsc -p tsconfig.json && tsc -p tsconfig.cjs.json",
+    "build": "pnpm run clean && tsc",
     "clean": "rm -rf dist tsconfig.tsbuildinfo",
-    "prepublish": "npm run build",
-    "prettier": "prettier --ignore-path .gitignore --check \"**/*.+(js|json|ts|tsx)\"",
+    "prepublishOnly": "pnpm run build",
+    "prettier": "prettier --ignore-path .gitignore --check \"**/*.+(js|mjs|json|ts|tsx)\"",
     "lint": "eslint",
-    "validate": "npm-run-all --parallel prettier lint test build"
+    "validate": "pnpm run \"/^(prettier|lint|test|build)$/\""
   },
   "repository": {
     "type": "git",
@@ -33,17 +33,13 @@
   },
   "homepage": "https://github.com/vyckes/cogwheel#readme",
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.6.0",
-    "@typescript-eslint/parser": "^8.6.0",
-    "esbuild": "^0.19.2",
-    "eslint": "8",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
-    "eslint-plugin-security": "^1.4.0",
-    "npm-run-all": "^4.1.5",
-    "prettier": "^3.3.3",
-    "typescript": "^5.6.2",
-    "vitest": "^2.1.1"
+    "eslint": "^10.10.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "prettier": "^3.9.6",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.70.0",
+    "vitest": "^5.0.0"
   },
-  "dependencies": {}
+  "packageManager": "pnpm@12.3.4"
 }

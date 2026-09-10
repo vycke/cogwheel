@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
 import { test, expect, beforeEach } from "vitest";
 import { machine } from "../../src";
 import { Action, Machine, State, Event } from "../../src/types";

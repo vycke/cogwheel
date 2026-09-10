@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import { test, expect } from "vitest";
 import { machine } from "../../src";
 import { Event, State } from "../../src/types";

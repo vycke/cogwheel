@@ -3,14 +3,12 @@
   "exclude": ["**/*.spec.ts", "**/*.test.ts"],
   "compilerOptions": {
     "lib": ["esnext", "dom"],
-    "target": "esnext",
+    "target": "es2020",
+    "module": "node20",
     "outDir": "./dist",
     "rootDir": "./src",
     "declaration": true,
     "strict": true,
-    "noImplicitAny": false,
-    "esModuleInterop": true,
-    "moduleResolution": "node",
-    "module": "CommonJS"
+    "noImplicitAny": false
   }
 }
