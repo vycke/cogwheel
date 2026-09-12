@@ -13,7 +13,7 @@ const configDefault = {
   green: { CHANGE: "yellow" },
   yellow: { CHANGE: "red" },
   red: {},
-};
+} as const;
 
 const countAssign: Action<Context, CountEvent> = function ({
   state,
@@ -60,7 +60,7 @@ test("Send - transition object", () => {
   const config = {
     green: { CHANGE: { target: "yellow" } },
     yellow: {},
-  };
+  } as const;
 
   const service = machine({ init: "green", states: config });
   service.send({ type: "CHANGE" });
@@ -70,12 +70,14 @@ test("Send - transition object", () => {
 test("immutability", () => {
   const service = machine({ init: "green", states: configDefault });
   expect(service.current).toBe("green");
+  // @ts-expect-error writes are ignored at runtime and rejected by the types
   service.current = "yellow";
   expect(service.current).toBe("green");
 });
 
 test("Incorrect initial state", () => {
   expect(() =>
+    // @ts-expect-error also caught at compile time
     machine({ init: "WrongInitialState", states: configDefault }),
   ).toThrow("invalid initial state");
 });
@@ -85,8 +87,9 @@ test("Non-existing target in configuration", () => {
     green: { CHANGE: "blue" },
     yellow: { CHANGE: "red" },
     red: {},
-  };
+  } as const;
 
+  // @ts-expect-error also caught at compile time
   expect(() => machine({ init: "green", states: config })).toThrow(
     "non-existing transition target",
   );

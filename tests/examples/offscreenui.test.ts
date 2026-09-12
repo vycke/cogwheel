@@ -19,7 +19,7 @@ const config = {
     TOGGLE: "visible",
     _entry: [toggling],
   },
-};
+} as const;
 
 test("Offscreen UI - open", async () => {
   const service = machine({ init: "invisible", states: config });
