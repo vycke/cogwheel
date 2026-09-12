@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 import { test, expect } from "vitest";
 import { machine } from "../../src";
-import { Action, Event } from "../../src/types";
+import { Action, Event } from "../../src";
 import { delay } from "../helpers";
 
 const toggling: Action<{}, Event> = ({ send }) => {

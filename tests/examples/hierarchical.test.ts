@@ -1,6 +1,6 @@
 import { test, expect } from "vitest";
 import { machine } from "../../src";
-import { MachineState, State, Event, Action } from "../../src/types";
+import { MachineState, State, Event, Action } from "../../src";
 
 type O = Record<string, unknown>;
 type N = Record<string, never>;

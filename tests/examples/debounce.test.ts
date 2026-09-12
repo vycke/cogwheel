@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 import { test, expect } from "vitest";
 import { machine } from "../../src";
-import { Event, State } from "../../src/types";
+import { Event, State } from "../../src";
 import { delay } from "../helpers";
 
 const config: Record<string, State<{}, Event>> = {

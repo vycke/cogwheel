@@ -1,6 +1,8 @@
 import { test, expect, beforeEach } from "vitest";
 import { machine } from "../../src";
-import { Action, Machine, State, O, Event } from "../../src/types";
+import { Action, Machine, State, Event } from "../../src";
+
+type O = Record<string, unknown>;
 
 type Context = { data: O | null; errors: O | null; valid: boolean };
 type FetchEvent = Event & { data?: unknown; errors?: unknown };

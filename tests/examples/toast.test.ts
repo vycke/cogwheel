@@ -1,6 +1,6 @@
 import { test, expect } from "vitest";
 import { machine } from "../../src";
-import { Event, State, Action } from "../../src/types";
+import { Event, State, Action } from "../../src";
 import { delay } from "../helpers";
 
 type Context = { label: string };
