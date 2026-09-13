@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 import { test, expect } from "vitest";
 import { machine } from "../../src";
-import { Action, Event } from "../../src";
+import { CwAction, CwEvent } from "../../src";
 import { delay } from "../helpers";
 
-const toggling: Action<{}, Event> = ({ send }) => {
+const toggling: CwAction<{}, CwEvent> = ({ send }) => {
   send({ type: "TOGGLE" }, 10);
 };
 

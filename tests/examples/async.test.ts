@@ -1,19 +1,22 @@
 import { test, expect, beforeEach } from "vitest";
 import { machine } from "../../src";
-import { Action, Machine, State, Event } from "../../src";
+import { CwAction, CwMachine, CwState, CwEvent } from "../../src";
 import { delay } from "../helpers";
 
 type Context = { label: string };
-type MachineEvent = Event;
-let service: Machine<Context, MachineEvent>;
+type CwEvent = CwEvent;
+let service: CwMachine<Context, CwEvent>;
 
-const pendingEntryAction: Action<Context, Event> = async ({ send, assign }) => {
+const pendingEntryAction: CwAction<Context, CwEvent> = async ({
+  send,
+  assign,
+}) => {
   await delay(50);
   assign({ label: "test" });
   send({ type: "FINISHED" });
 };
 
-const config: Record<string, State<Context, MachineEvent>> = {
+const config: Record<string, CwState<Context, CwEvent>> = {
   init: { STARTED: "pending" },
   pending: {
     FINISHED: "success",

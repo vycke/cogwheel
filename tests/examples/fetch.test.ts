@@ -1,22 +1,26 @@
 import { test, expect, beforeEach } from "vitest";
 import { machine } from "../../src";
-import { Action, Machine, State, Event } from "../../src";
+import { CwAction, CwMachine, CwState, CwEvent } from "../../src";
 
 type O = Record<string, unknown>;
 
 type Context = { data: O | null; errors: O | null; valid: boolean };
-type FetchEvent = Event & { data?: unknown; errors?: unknown };
-type ModifierEvent = Event & { key: string; value: unknown };
-type MachineEvent = Event | ModifierEvent | FetchEvent;
+type FetchEvent = CwEvent & { data?: unknown; errors?: unknown };
+type ModifierEvent = CwEvent & { key: string; value: unknown };
+type CwEvent = CwEvent | ModifierEvent | FetchEvent;
 
-const successEntry: Action<Context, FetchEvent> = ({ state, event, assign }) =>
+const successEntry: CwAction<Context, FetchEvent> = ({
+  state,
+  event,
+  assign,
+}) =>
   assign({
     ...state.context,
     data: event.data,
     errors: null,
     valid: true,
   } as Context);
-const errorEntry: Action<Context, FetchEvent> = ({ state, event, assign }) =>
+const errorEntry: CwAction<Context, FetchEvent> = ({ state, event, assign }) =>
   assign({
     ...state.context,
     errors: event.errors,
@@ -24,14 +28,10 @@ const errorEntry: Action<Context, FetchEvent> = ({ state, event, assign }) =>
     valid: false,
   } as Context);
 
-const pendingEntry: Action<Context, FetchEvent> = ({ state, assign }) =>
+const pendingEntry: CwAction<Context, FetchEvent> = ({ state, assign }) =>
   assign({ ...state.context, errors: null });
 
-const invalidEntry: Action<Context, MachineEvent> = ({
-  state,
-  event,
-  assign,
-}) => {
+const invalidEntry: CwAction<Context, CwEvent> = ({ state, event, assign }) => {
   const _e = event as ModifierEvent;
   assign({
     ...state.context,
@@ -43,7 +43,7 @@ const invalidEntry: Action<Context, MachineEvent> = ({
   });
 };
 
-const config: Record<string, State<Context, MachineEvent>> = {
+const config: Record<string, CwState<Context, CwEvent>> = {
   idle: { STARTED: "pending" },
   pending: { FINISHED: "success", FAILED: "error", _entry: [pendingEntry] },
   success: { STARTED: "pending", MODIFIED: "invalid", _entry: [successEntry] },
@@ -51,7 +51,7 @@ const config: Record<string, State<Context, MachineEvent>> = {
   error: { STARTED: "pending", _entry: [errorEntry] },
 };
 
-let service: Machine<Context, MachineEvent>;
+let service: CwMachine<Context, CwEvent>;
 const init: Context = { errors: null, data: null, valid: false };
 
 beforeEach(() => {

@@ -1,5 +1,5 @@
 import { test, expect, expectTypeOf } from "vitest";
-import { machine, type Action } from "../src";
+import { machine, type CwAction } from "../src";
 
 // Type-level checks, verified by `pnpm typecheck`: expectTypeOf asserts exact
 // types (no-op at runtime); the ts-expect-error lines assert rejections.
@@ -7,7 +7,7 @@ type Ctx = { count: number };
 type Ev = { type: "INC"; by?: number } | { type: "RESET" };
 
 // A discriminated event union narrows without casts
-const inc: Action<Ctx, Ev> = ({ state, event, assign }) => {
+const inc: CwAction<Ctx, Ev> = ({ state, event, assign }) => {
   if (event.type === "INC")
     assign({ count: state.context.count + (event.by ?? 1) });
 };
