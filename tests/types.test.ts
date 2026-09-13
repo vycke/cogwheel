@@ -1,7 +1,8 @@
-import { test, expect } from "vitest";
+import { test, expect, expectTypeOf } from "vitest";
 import { machine, type Action } from "../src";
 
-// Compile-time checks: `pnpm typecheck` fails if an @ts-expect-error stops erroring.
+// Type-level checks, verified by `pnpm typecheck`: expectTypeOf asserts exact
+// types (no-op at runtime); the ts-expect-error lines assert rejections.
 type Ctx = { count: number };
 type Ev = { type: "INC"; by?: number } | { type: "RESET" };
 
@@ -21,21 +22,18 @@ test("types - states, context and events are inferred from the config", () => {
     },
   });
 
-  const current: "idle" | "counting" = service.current;
-  const count: number = service.context.count;
-  expect([current, count]).toEqual(["idle", 0]);
+  expectTypeOf(service.current).toEqualTypeOf<"idle" | "counting">();
+  expectTypeOf(service.context).toEqualTypeOf<Ctx>();
+  expectTypeOf(service.send).parameter(0).toEqualTypeOf<Ev>();
 
   service.send({ type: "INC", by: 2 });
   expect(service.current).toBe("counting");
   expect(service.context.count).toBe(2);
 
-  // @ts-expect-error not a state of this machine
-  const other: "other" = service.current;
   // @ts-expect-error not an event of this machine
   service.send({ type: "DEC" });
   // @ts-expect-error machine is read-only
   service.current = "idle";
-  expect(other).toBe("counting");
 });
 
 test("types - config mistakes are compile errors", () => {
@@ -50,6 +48,6 @@ test("types - config mistakes are compile errors", () => {
 test("types - pre-declared config keeps working with `as const`", () => {
   const states = { on: { TOGGLE: "off" }, off: { TOGGLE: "on" } } as const;
   const service = machine({ init: "on", states });
-  const current: "on" | "off" = service.current;
-  expect(current).toBe("on");
+  expectTypeOf(service.current).toEqualTypeOf<"on" | "off">();
+  expect(service.current).toBe("on");
 });
