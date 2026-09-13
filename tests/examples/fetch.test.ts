@@ -7,7 +7,7 @@ type O = Record<string, unknown>;
 type Context = { data: O | null; errors: O | null; valid: boolean };
 type FetchEvent = CwEvent & { data?: unknown; errors?: unknown };
 type ModifierEvent = CwEvent & { key: string; value: unknown };
-type CwEvent = CwEvent | ModifierEvent | FetchEvent;
+type AppEvent = CwEvent | ModifierEvent | FetchEvent;
 
 const successEntry: CwAction<Context, FetchEvent> = ({
   state,
@@ -31,7 +31,11 @@ const errorEntry: CwAction<Context, FetchEvent> = ({ state, event, assign }) =>
 const pendingEntry: CwAction<Context, FetchEvent> = ({ state, assign }) =>
   assign({ ...state.context, errors: null });
 
-const invalidEntry: CwAction<Context, CwEvent> = ({ state, event, assign }) => {
+const invalidEntry: CwAction<Context, AppEvent> = ({
+  state,
+  event,
+  assign,
+}) => {
   const _e = event as ModifierEvent;
   assign({
     ...state.context,
@@ -43,7 +47,7 @@ const invalidEntry: CwAction<Context, CwEvent> = ({ state, event, assign }) => {
   });
 };
 
-const config: Record<string, CwState<Context, CwEvent>> = {
+const config: Record<string, CwState<Context, AppEvent>> = {
   idle: { STARTED: "pending" },
   pending: { FINISHED: "success", FAILED: "error", _entry: [pendingEntry] },
   success: { STARTED: "pending", MODIFIED: "invalid", _entry: [successEntry] },
@@ -51,7 +55,7 @@ const config: Record<string, CwState<Context, CwEvent>> = {
   error: { STARTED: "pending", _entry: [errorEntry] },
 };
 
-let service: CwMachine<Context, CwEvent>;
+let service: CwMachine<Context, AppEvent>;
 const init: Context = { errors: null, data: null, valid: false };
 
 beforeEach(() => {

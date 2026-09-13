@@ -4,8 +4,8 @@ import { CwAction, CwMachine, CwState, CwEvent } from "../../src";
 import { delay } from "../helpers";
 
 type Context = { label: string };
-type CwEvent = CwEvent;
-let service: CwMachine<Context, CwEvent>;
+type AppEvent = CwEvent;
+let service: CwMachine<Context, AppEvent>;
 
 const pendingEntryAction: CwAction<Context, CwEvent> = async ({
   send,
@@ -16,7 +16,7 @@ const pendingEntryAction: CwAction<Context, CwEvent> = async ({
   send({ type: "FINISHED" });
 };
 
-const config: Record<string, CwState<Context, CwEvent>> = {
+const config: Record<string, CwState<Context, AppEvent>> = {
   init: { STARTED: "pending" },
   pending: {
     FINISHED: "success",
