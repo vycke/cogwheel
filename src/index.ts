@@ -7,53 +7,45 @@ export type Event = MachineEvent;
 
 type Send<E extends MachineEvent> = (event: E, delay?: number) => boolean;
 type Assign<C extends object> = (ctx: C) => void;
-type Listen<C extends object, E extends MachineEvent, S extends string> = (
-  listener: Action<C, E, S>,
+type Listen<C extends object, E extends MachineEvent> = (
+  listener: Action<C, E>,
 ) => () => void;
 
 // Partial machine
-export type MachineState<C extends object, S extends string = string> = {
-  readonly current: S;
+export type MachineState<C extends object> = {
+  readonly current: string;
   readonly id: string;
   readonly context: C;
 };
 
-export type ActionInput<
-  C extends object,
-  E extends MachineEvent,
-  S extends string = string,
-> = {
-  state: MachineState<C, S>;
+export type ActionInput<C extends object, E extends MachineEvent> = {
+  state: MachineState<C>;
   event: E;
   send: Send<E>;
   assign: Assign<C>;
 };
 
-export type Action<
-  C extends object,
-  E extends MachineEvent,
-  S extends string = string,
-> = (input: ActionInput<C, E, S>) => void;
+export type Action<C extends object, E extends MachineEvent> = (
+  input: ActionInput<C, E>,
+) => void;
 
-export type Guard<C extends object, S extends string = string> = (
-  state: MachineState<C, S>,
-) => boolean;
+export type Guard<C extends object> = (state: MachineState<C>) => boolean;
 
+// S is the union of state names, inferred by `machine()` from the keys of `states`
 export type Transition<
   C extends object,
   E extends MachineEvent,
   S extends string = string,
 > = {
   target: S;
-  guard?: Guard<C, S>;
-  actions?: readonly Action<C, E, S>[];
+  guard?: Guard<C>;
+  actions?: readonly Action<C, E>[];
 };
 
 type LooseState<C extends object, E extends MachineEvent, S extends string> = {
-  _entry?: readonly Action<C, E, S>[];
-  _exit?: readonly Action<C, E, S>[];
-  [key: string]:
-    S | Transition<C, E, S> | readonly Action<C, E, S>[] | undefined;
+  _entry?: readonly Action<C, E>[];
+  _exit?: readonly Action<C, E>[];
+  [key: string]: S | Transition<C, E, S> | readonly Action<C, E>[] | undefined;
 };
 
 // Events with literal `type`s get their keys checked; `{ type: string }` falls
@@ -64,10 +56,7 @@ export type State<
   S extends string = string,
 > = string extends E["type"]
   ? LooseState<C, E, S>
-  : {
-      _entry?: readonly Action<C, E, S>[];
-      _exit?: readonly Action<C, E, S>[];
-    } & {
+  : { _entry?: readonly Action<C, E>[]; _exit?: readonly Action<C, E>[] } & {
       [K in E["type"]]?: S | Transition<C, E, S>;
     };
 
@@ -88,9 +77,12 @@ export type Machine<
   C extends object,
   E extends MachineEvent,
   S extends string = string,
-> = MachineState<C, S> & {
+> = {
+  readonly current: S;
+  readonly id: string;
+  readonly context: C;
   send: Send<E>;
-  listen: Listen<C, E, S>;
+  listen: Listen<C, E>;
 };
 
 /**
@@ -152,20 +144,20 @@ export function machine<
   const isInvalid = validate(config.init, states);
   if (isInvalid) throw Error(isInvalid);
   let _timeout: ReturnType<typeof setTimeout>;
-  const _listeners: Action<C, E, S>[] = [];
+  const _listeners: Action<C, E>[] = [];
   const _state = {
     id: config.id || "",
     current: config.init as S,
     send,
     context: freeze(config.context || ({} as C)),
-    listen: (l: Action<C, E, S>) => {
+    listen: (l: Action<C, E>) => {
       _listeners.push(l);
       return () => _listeners.splice(_listeners.indexOf(l) >>> 0, 1);
     },
   };
 
   // Get partial information of the machine
-  function partial(): MachineState<C, S> {
+  function partial(): MachineState<C> {
     const { id, context, current } = _state;
     return { id, current, context: JSON.parse(JSON.stringify(context)) };
   }
@@ -184,7 +176,7 @@ export function machine<
   }
 
   // function to execute actions within a machine
-  function execute(event: E, actions?: readonly Action<C, E, S>[]): void {
+  function execute(event: E, actions?: readonly Action<C, E>[]): void {
     if (!actions) return;
     // Run over all actions
     for (const action of actions) {
